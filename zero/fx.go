@@ -21,7 +21,7 @@ type Fx interface {
 	ApiUrl() string
 	Serve()
 	Router() *mux.Router
-	ToBytes(input string) ([]byte, error)
+	ToBytes(input string) []byte
 }
 
 type fx struct {
@@ -137,14 +137,22 @@ func (f *fx) addRoute(path string, data []byte, contentType string) {
 	})
 }
 
-func (f *fx) ToBytes(input string) ([]byte, error) {
+func (f *fx) ToBytes(input string) []byte {
 	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
 		resp, err := http.Get(input)
 		if err != nil {
-			return nil, err
+			return nil
 		}
 		defer resp.Body.Close()
-		return io.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil
+		}
+		return b
 	}
-	return os.ReadFile(input)
+	b, err := os.ReadFile(input)
+	if err != nil {
+		return nil
+	}
+	return b
 }
