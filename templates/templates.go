@@ -90,11 +90,11 @@ func (t *templates) Scroll() *zero.One {
     raf = requestAnimationFrame(tick);
   };
   
-  Object.keys(speeds).forEach(k => {
-    pathless.onKey(k, () => {
+  pathless.onKey(k => {
+    if (speeds[k]) {
       speed = speeds[k];
       if (!raf) tick();
-    });
+    }
   });
   
   document.addEventListener('keyup', e => speeds[e.key] && (speed = 0));
@@ -122,17 +122,19 @@ func (t *templates) BuildSlides(dir string) *zero.One {
         if (!img) return;
         
         try {
-            const { data } = await pathless.fetch(apiUrl + '/%s/' + slides[index], { key: '%s.' + slides[index] });
+            const { data } = await pathless.fetch(apiUrl + '/%s/' + slides[index], '%s.' + slides[index]);
             img.src = data;
             img.alt = slides[index];
         } catch { img.alt = 'Failed'; }
     };
 
-    pathless.fetch(apiUrl + '/%s/order', { key: '%s.order' })
+    pathless.fetch(apiUrl + '/%s/order', '%s.order')
         .then(({ data }) => { slides = data || []; show(index); });
 
-    pathless.onKey('a', () => show(index - 1));
-    pathless.onKey('d', () => show(index + 1));
+    pathless.onKey(k => {
+        if (k === 'a') show(index - 1);
+        else if (k === 'd') show(index + 1);
+    });
 })();
     `, prefix, prefix, prefix, prefix))
 
