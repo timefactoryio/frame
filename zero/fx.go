@@ -3,6 +3,7 @@ package zero
 import (
 	"bytes"
 	"compress/gzip"
+	"io"
 	"mime"
 	"net/http"
 	"os"
@@ -20,6 +21,7 @@ type Fx interface {
 	ApiUrl() string
 	Serve()
 	Router() *mux.Router
+	ToBytes(input string) ([]byte, error)
 }
 
 type fx struct {
@@ -133,4 +135,16 @@ func (f *fx) addRoute(path string, data []byte, contentType string) {
 		w.Header().Set("Content-Type", contentType)
 		w.Write(zipped)
 	})
+}
+
+func (f *fx) ToBytes(input string) ([]byte, error) {
+	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
+		resp, err := http.Get(input)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		return io.ReadAll(resp.Body)
+	}
+	return os.ReadFile(input)
 }

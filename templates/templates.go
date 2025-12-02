@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"os"
 	"strings"
 
 	"github.com/timefactoryio/frame/zero"
@@ -54,13 +53,7 @@ func (t *templates) XLink(username string) *zero.One {
 	return t.LinkedIcon(href, logo, "X")
 }
 
-func (t *templates) README(file string) *zero.One {
-	content, err := os.ReadFile(file)
-	if err != nil {
-		empty := zero.One("")
-		return &empty
-	}
-
+func (t *templates) README(content []byte) *zero.One {
 	var buf bytes.Buffer
 	if err := (*t.Markdown()).Convert(content, &buf); err != nil {
 		empty := zero.One("")
@@ -75,9 +68,7 @@ func (t *templates) README(file string) *zero.One {
 
 	markdown := zero.One(template.HTML(html))
 	scroll := t.Scroll()
-
 	css := t.CSS(t.TextCSS())
-
 	result := t.Build("text", true, &markdown, scroll, &css)
 	return result
 }
