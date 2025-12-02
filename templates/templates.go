@@ -98,14 +98,14 @@ func (t *templates) Scroll() *zero.One {
   };
   
   const speeds = { w: -20, s: 20, a: -40, d: 40 };
-  pathless.onKey((k) => {
-    if (speeds[k]) {
-      speed = speeds[k];
+  Object.entries(speeds).forEach(([k, v]) => {
+    pathless.onKey(k, () => {
+      speed = v;
       if (!isScrolling) {
         isScrolling = true;
         scroll();
       }
-    }
+    });
   });
   
   document.addEventListener('keyup', (e) => {
@@ -153,11 +153,8 @@ func (t *templates) BuildSlides(dir string) *zero.One {
             if (slides.length) show(index);
         });
 
-    pathless.onKey((k) => {
-        k = k.toLowerCase();
-        if (k === 'a') show(index - 1);
-        else if (k === 'd') show(index + 1);
-    });
+    pathless.onKey('a', () => show(index - 1));
+    pathless.onKey('d', () => show(index + 1));
 })();
     `, prefix, prefix, prefix, prefix))
 
