@@ -77,27 +77,18 @@ func (t *templates) Scroll() *zero.One {
 	js := `
 (function(){
   const { frame, state } = pathless.ctx();
-  
   frame.scrollTop = state.scroll || 0;
   frame.addEventListener('scroll', () => pathless.update('scroll', frame.scrollTop));
   
-  const speeds = { w: -20, s: 20, a: -40, d: 40 };
   let speed = 0, raf = 0;
-  
-  const tick = () => {
+  const scroll = v => { speed = v; raf || (raf = requestAnimationFrame(function tick() {
     if (!speed) return raf = 0;
     frame.scrollBy({ top: speed });
     raf = requestAnimationFrame(tick);
-  };
+  }))};
   
-  pathless.onKey(k => {
-    if (speeds[k]) {
-      speed = speeds[k];
-      if (!raf) tick();
-    }
-  });
-  
-  document.addEventListener('keyup', e => speeds[e.key] && (speed = 0));
+  ['w','s','a','d'].forEach((k,i) => pathless.onKey(k, () => scroll([-20,20,-40,40][i])));
+  document.addEventListener('keyup', () => speed = 0);
 })();
 `
 	result := zero.One(template.HTML(fmt.Sprintf(`<script>%s</script>`, js)))
@@ -131,10 +122,8 @@ func (t *templates) BuildSlides(dir string) *zero.One {
     pathless.fetch(apiUrl + '/%s/order', '%s.order')
         .then(({ data }) => { slides = data || []; show(index); });
 
-    pathless.onKey(k => {
-        if (k === 'a') show(index - 1);
-        else if (k === 'd') show(index + 1);
-    });
+    pathless.onKey('a', () => show(index - 1));
+    pathless.onKey('d', () => show(index + 1));
 })();
     `, prefix, prefix, prefix, prefix))
 
