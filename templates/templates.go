@@ -88,7 +88,8 @@ func (t *templates) Scroll() *zero.One {
   }))};
   
   const keys = { w: -20, s: 20, a: -40, d: 40 };
-  pathless.onKey(k => speed = keys[k] ?? 0);
+  pathless.onKey(k => keys[k] !== undefined && scroll(keys[k]));
+  document.addEventListener('keyup', () => speed = 0);
 })();
 `
 	result := zero.One(template.HTML(fmt.Sprintf(`<script>%s</script>`, js)))
