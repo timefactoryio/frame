@@ -10,7 +10,7 @@ import (
 )
 
 func (t *templates) Landing(heading, github, x string) {
-	logo := t.ApiUrl() + "/img/logo"
+	logo := t.Api() + "/img/logo"
 	img := t.Img(logo, "logo")
 	h1 := t.H1(heading)
 	css := t.CSS(t.ZeroCSS())
@@ -39,7 +39,7 @@ func (t *templates) GithubLink(username string) *zero.One {
 	if username == "" {
 		return nil
 	}
-	logo := fmt.Sprintf("%s/img/gh", t.ApiUrl())
+	logo := fmt.Sprintf("%s/img/gh", t.Api())
 	href := fmt.Sprintf("https://github.com/%s", username)
 	return t.LinkedIcon(href, logo, "GitHub")
 }
@@ -48,7 +48,7 @@ func (t *templates) XLink(username string) *zero.One {
 	if username == "" {
 		return nil
 	}
-	logo := fmt.Sprintf("%s/img/x", t.ApiUrl())
+	logo := fmt.Sprintf("%s/img/x", t.Api())
 	href := fmt.Sprintf("https://x.com/%s", username)
 	return t.LinkedIcon(href, logo, "X")
 }

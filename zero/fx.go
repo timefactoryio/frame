@@ -3,7 +3,9 @@ package zero
 import (
 	"bytes"
 	"compress/gzip"
+	"embed"
 	"io"
+	"io/fs"
 	"mime"
 	"net/http"
 	"os"
@@ -17,29 +19,33 @@ import (
 type Fx interface {
 	AddFile(filePath string, prefix string) error
 	AddPath(dir string) string
-	PathlessUrl() string
-	ApiUrl() string
+	EmbedPath(efs embed.FS, root string) error
+	Pathless() string
+	Api() string
 	Serve()
 	Router() *mux.Router
 	ToBytes(input string) []byte
 }
 
 type fx struct {
-	router      *mux.Router
-	pathlessUrl string
-	apiURL      string
+	router   *mux.Router
+	pathless string
+	api      string
 }
 
-func NewFx(pathlessUrl, apiUrl string) Fx {
+func NewFx(pathless, apiUrl string) Fx {
+	if pathless == "" {
+		pathless = "http://localhost:1000"
+	}
 	if apiUrl == "" {
 		apiUrl = "http://localhost:1001"
 	}
 	f := &fx{
-		router:      mux.NewRouter(),
-		pathlessUrl: pathlessUrl,
-		apiURL:      apiUrl,
+		router:   mux.NewRouter(),
+		pathless: pathless,
+		api:      apiUrl,
 	}
-	f.router.Use(f.cors(pathlessUrl))
+	f.router.Use(f.cors())
 	return f
 }
 
@@ -47,12 +53,12 @@ func (f *fx) Router() *mux.Router {
 	return f.router
 }
 
-func (f *fx) PathlessUrl() string {
-	return f.pathlessUrl
+func (f *fx) Pathless() string {
+	return f.pathless
 }
 
-func (f *fx) ApiUrl() string {
-	return f.apiURL
+func (f *fx) Api() string {
+	return f.api
 }
 
 func (f *fx) Serve() {
@@ -61,15 +67,10 @@ func (f *fx) Serve() {
 	}()
 }
 
-func (f *fx) cors(pathlessUrl string) mux.MiddlewareFunc {
-	origin := "http://localhost:1000"
-	if pathlessUrl != "" {
-		origin = "https://" + pathlessUrl
-	}
-
+func (f *fx) cors() mux.MiddlewareFunc {
 	return handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type", "X-Frame"}),
-		handlers.AllowedOrigins([]string{origin}),
+		handlers.AllowedOrigins([]string{f.pathless}),
 		handlers.AllowedMethods([]string{"GET", "OPTIONS"}),
 		handlers.ExposedHeaders([]string{"X-Frame", "X-Frames"}),
 	)
@@ -113,6 +114,28 @@ func (f *fx) AddPath(dir string) string {
 		return nil
 	})
 	return prefix
+}
+
+// New method for embedded filesystem
+func (f *fx) EmbedPath(efs embed.FS, root string) error {
+	return fs.WalkDir(efs, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+
+		fileData, err := efs.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		base := filepath.Base(path)
+		name := base[:len(base)-len(filepath.Ext(base))]
+		contentType := f.getType(base, fileData)
+		routePath := "/" + filepath.Base(root) + "/" + name
+
+		f.addRoute(routePath, fileData, contentType)
+		return nil
+	})
 }
 
 func (f *fx) getType(filename string, data []byte) string {
