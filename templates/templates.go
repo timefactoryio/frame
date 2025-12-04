@@ -87,8 +87,8 @@ func (t *templates) Scroll() *zero.One {
     raf = requestAnimationFrame(tick);
   }))};
   
-  ['w','s','a','d'].forEach((k,i) => pathless.onKey(k, () => scroll([-20,20,-40,40][i])));
-  document.addEventListener('keyup', () => speed = 0);
+  const keys = { w: -20, s: 20, a: -40, d: 40 };
+  pathless.onKey(k => speed = keys[k] ?? 0);
 })();
 `
 	result := zero.One(template.HTML(fmt.Sprintf(`<script>%s</script>`, js)))
@@ -122,10 +122,11 @@ func (t *templates) BuildSlides(dir string) *zero.One {
     pathless.fetch(apiUrl + '/%s/order', '%s.order')
         .then(({ data }) => { slides = data || []; show(index); });
 
-    pathless.onKey('a', () => show(index - 1));
-    pathless.onKey('d', () => show(index + 1));
+    pathless.onKey(k => {
+        if (k === 'a') show(index - 1);
+        if (k === 'd') show(index + 1);
+    });
 })();
     `, prefix, prefix, prefix, prefix))
-
 	return t.Build("slides", true, img, &css, &js)
 }
