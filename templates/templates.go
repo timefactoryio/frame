@@ -76,11 +76,10 @@ func (t *templates) README(content []byte) *zero.One {
 func (t *templates) Scroll() *zero.One {
 	js := `
 (function(){
-  const { frame, state } = pathless.ctx();
+  const frame = pathless.frame();
   const key = 'scroll';
   
-  frame.scrollTop = state[key] || 0;
-  
+  frame.scrollTop = pathless.state()[key] || 0;
   frame.addEventListener('scroll', () => {
     pathless.update(key, frame.scrollTop);
   });
@@ -98,7 +97,7 @@ func (t *templates) Scroll() *zero.One {
   };
   
   const speeds = { w: -20, s: 20, a: -40, d: 40 };
-  pathless.onKey((k) => {
+  pathless.keybind((k) => {
     if (speeds[k]) {
       speed = speeds[k];
       if (!isScrolling) {
@@ -123,10 +122,9 @@ func (t *templates) BuildSlides(dir string) *zero.One {
 	css := t.CSS(t.SlidesCSS())
 	js := t.JS(fmt.Sprintf(`
 (function() {
-    const { frame, state } = pathless.ctx();
-
+    const frame = pathless.frame();
     let slides = [];
-    let index = state.nav || 0;
+    let index = pathless.state().nav || 0;
 
     async function show(i) {
         if (!slides.length) return;
@@ -153,13 +151,12 @@ func (t *templates) BuildSlides(dir string) *zero.One {
             if (slides.length) show(index);
         });
 
-    pathless.onKey((k) => {
+    pathless.keybind((k) => {
         k = k.toLowerCase();
         if (k === 'a') show(index - 1);
         else if (k === 'd') show(index + 1);
     });
 })();
     `, prefix, prefix, prefix, prefix))
-
 	return t.Build("slides", true, img, &css, &js)
 }
