@@ -168,72 +168,47 @@ func (t *templates) BuildVideo(dir string) *zero.One {
 	js := t.JS(fmt.Sprintf(`
 (function() {
     const frame = pathless.frame();
-    const videoEl = frame.querySelector('video');
-    if (!videoEl) return;
+    const el = frame.querySelector('video');
+    if (!el) return;
 
-    let videos = [];
-    let index = pathless.state().nav || 0;
+    let list = [];
+    let i = pathless.state().nav || 0;
+    const tKey = (n) => '%s.t.' + n;
 
-    function timeKey(i) {
-        return '%s.time.' + i;
-    }
+    const save = () => el.src && !isNaN(el.currentTime) && pathless.update(tKey(i), el.currentTime);
 
-    function saveTime() {
-        if (videoEl.src && !isNaN(videoEl.currentTime)) {
-            pathless.update(timeKey(index), videoEl.currentTime);
-        }
-    }
-
-    async function show(i) {
-        if (!videos.length) return;
-        saveTime();
-        index = ((i %% videos.length) + videos.length) %% videos.length;
-        pathless.update("nav", index);
-
-        const video = videos[index];
-        const savedTime = pathless.state()[timeKey(index)] || 0;
-        videoEl.src = apiUrl + '/%s/' + video + '#t=' + savedTime;
-        videoEl.load();
-    }
+    const show = (n) => {
+        if (!list.length) return;
+        save();
+        i = ((n %% list.length) + list.length) %% list.length;
+        pathless.update("nav", i);
+        el.src = apiUrl + '/%s/' + list[i] + '#t=' + (pathless.state()[tKey(i)] || 0);
+        el.load();
+    };
 
     pathless.fetch(apiUrl + '/%s/order', { key: '%s.order' })
-        .then(({ data }) => {
-            videos = data || [];
-            if (videos.length) show(index);
-        });
+        .then(({ data }) => { list = data || []; if (list.length) show(i); });
 
-    // Save time periodically
-    videoEl.addEventListener('timeupdate', saveTime);
-
-    // Save time when leaving the frame
-    window.addEventListener('beforeunload', saveTime);
+    el.addEventListener('timeupdate', save);
+    window.addEventListener('beforeunload', save);
 
     document.addEventListener('keydown', (e) => {
         if (e.key === ' ') {
             e.preventDefault();
-            if (videoEl.paused) {
-                videoEl.play().catch(() => {});
-            } else {
-                videoEl.pause();
-            }
+            el.paused ? el.play().catch(() => {}) : el.pause();
         }
     });
 
     pathless.keybind((k) => {
-        k = k.toLowerCase();
-        if (k === 'a') {
-            show(index - 1);
-        } else if (k === 'd') {
-            show(index + 1);
-        } else if (k === 'x') {
-            videoEl.playbackRate = Math.min(videoEl.playbackRate + 0.25, 4);
-        } else if (k === 'c') {
-            videoEl.playbackRate = Math.max(videoEl.playbackRate - 0.25, 0.25);
-        } else if (k === 'w') {
-            videoEl.volume = Math.min(videoEl.volume + 0.1, 1);
-        } else if (k === 's') {
-            videoEl.volume = Math.max(videoEl.volume - 0.1, 0);
-        }
+        const m = {
+            a: () => show(i - 1),
+            d: () => show(i + 1),
+            w: () => el.volume = Math.min(el.volume + 0.1, 1),
+            s: () => el.volume = Math.max(el.volume - 0.1, 0),
+            x: () => el.playbackRate = Math.min(el.playbackRate + 0.25, 4),
+            c: () => el.playbackRate = Math.max(el.playbackRate - 0.25, 0.25),
+        };
+        m[k.toLowerCase()]?.();
     });
 })();
     `, prefix, prefix, prefix, prefix))

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"embed"
-	"fmt"
 	"io"
 	"io/fs"
 	"mime"
@@ -12,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -168,9 +168,7 @@ func (f *fx) addRoute(path string, data []byte, contentType string) {
 func (f *fx) addVideoRoute(path string, data []byte, contentType string) {
 	f.Router().HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", contentType)
-		w.Header().Set("Accept-Ranges", "bytes")
-		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
-		w.Write(data)
+		http.ServeContent(w, r, path, time.Time{}, bytes.NewReader(data))
 	})
 }
 
