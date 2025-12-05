@@ -167,6 +167,7 @@ func (t *templates) BuildVideo(dir string) *zero.One {
 	css := t.CSS(t.VideoCSS())
 	js := t.JS(fmt.Sprintf(`
 (function() {
+    const space = pathless.space();
     const frame = pathless.frame();
     const el = frame.querySelector('video');
     if (!el) return;
@@ -182,6 +183,7 @@ func (t *templates) BuildVideo(dir string) *zero.One {
         el.pause();
         el.src = '';
         el.load();
+        document.removeEventListener('keydown', onKeydown);
     };
 
     const show = (n) => {
@@ -209,9 +211,12 @@ func (t *templates) BuildVideo(dir string) *zero.One {
             }
         }
     });
-    observer.observe(pathless.space(), { childList: true, subtree: true });
+    observer.observe(space, { childList: true, subtree: true });
+
+    const isFocused = () => pathless.space() === space;
 
     const onKeydown = (e) => {
+        if (!isFocused()) return;
         if (e.key === ' ') {
             e.preventDefault();
             el.paused ? el.play().catch(() => {}) : el.pause();
