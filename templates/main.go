@@ -10,6 +10,7 @@ type Templates interface {
 	README(content []byte) *zero.One
 	Scroll() *zero.One
 	BuildSlides(dir string) *zero.One
+	BuildVideo(dir string) *zero.One
 }
 
 type templates struct {
