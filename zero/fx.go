@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"embed"
+	"fmt"
 	"io"
 	"io/fs"
 	"mime"
@@ -110,7 +111,11 @@ func (f *fx) AddPath(dir string) string {
 		contentType := f.getType(base, fileData)
 		routePath := "/" + prefix + "/" + name
 
-		f.addRoute(routePath, fileData, contentType)
+		if strings.HasPrefix(contentType, "video/") {
+			f.addVideoRoute(routePath, fileData, contentType)
+		} else {
+			f.addRoute(routePath, fileData, contentType)
+		}
 		return nil
 	})
 	return prefix
@@ -157,6 +162,15 @@ func (f *fx) addRoute(path string, data []byte, contentType string) {
 		w.Header().Set("Content-Encoding", "gzip")
 		w.Header().Set("Content-Type", contentType)
 		w.Write(zipped)
+	})
+}
+
+func (f *fx) addVideoRoute(path string, data []byte, contentType string) {
+	f.Router().HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("Accept-Ranges", "bytes")
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(data)))
+		w.Write(data)
 	})
 }
 
