@@ -170,69 +170,36 @@ func (t *templates) BuildVideo(dir string) *zero.One {
     const el = pathless.frame().querySelector('video');
     if (!el) return;
 
+    el.volume = 1;
     let list = [];
     let i = pathless.state().nav || 0;
-    let rHeld = false;
-    const tKey = (n) => '%s.t.' + n;
-
-    const save = () => el.src && !isNaN(el.currentTime) && pathless.update(tKey(i), el.currentTime);
 
     const show = (n) => {
         if (!list.length) return;
-        save();
+        pathless.update('t' + i, el.currentTime || 0);
         i = ((n %% list.length) + list.length) %% list.length;
-        pathless.update("nav", i);
-        el.src = apiUrl + '/%s/' + list[i] + '#t=' + (pathless.state()[tKey(i)] || 0);
+        pathless.update('nav', i);
+        el.src = apiUrl + '/%s/' + list[i] + '#t=' + (pathless.state()['t' + i] || 0);
         el.load();
     };
 
     pathless.fetch(apiUrl + '/%s/order', { key: '%s.order' })
         .then(({ data }) => { list = data || []; if (list.length) show(i); });
 
-    el.addEventListener('timeupdate', save);
-
-    const onKeydown = (e) => {
-        if (e.key === 'r') rHeld = true;
-        if (e.key === ' ') {
-            e.preventDefault();
-            el.paused ? el.play().catch(() => {}) : el.pause();
-        }
-    };
-    const onKeyup = (e) => {
-        if (e.key === 'r') rHeld = false;
-    };
-    document.addEventListener('keydown', onKeydown);
-    document.addEventListener('keyup', onKeyup);
-
     pathless.cleanup(() => {
-        save();
+        pathless.update('t' + i, el.currentTime || 0);
         el.pause();
-        el.src = '';
-        document.removeEventListener('keydown', onKeydown);
-        document.removeEventListener('keyup', onKeyup);
     });
 
     pathless.keybind((k) => {
-        k = k.toLowerCase();
-        if (rHeld) {
-            const m = {
-                w: () => el.playbackRate = Math.min(el.playbackRate + 0.25, 4),
-                s: () => el.playbackRate = Math.max(el.playbackRate - 0.25, 0.25),
-                a: () => el.currentTime = Math.max(el.currentTime - 5, 0),
-                d: () => el.currentTime = Math.min(el.currentTime + 5, el.duration || 0),
-            };
-            m[k]?.();
-        } else {
-            const m = {
-                a: () => show(i - 1),
-                d: () => show(i + 1),
-                w: () => el.volume = Math.min(el.volume + 0.1, 1),
-                s: () => el.volume = Math.max(el.volume - 0.1, 0),
-            };
-            m[k]?.();
-        }
+        const m = {
+            a: () => show(i - 1),
+            d: () => show(i + 1),
+            x: () => el.paused ? el.play().catch(() => {}) : el.pause(),
+        };
+        m[k.toLowerCase()]?.();
     });
 })();
-    `, prefix, prefix, prefix, prefix))
+    `, prefix, prefix, prefix))
 	return t.Build("video", true, video, &css, &js)
 }
