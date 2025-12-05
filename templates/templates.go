@@ -160,3 +160,55 @@ func (t *templates) BuildSlides(dir string) *zero.One {
     `, prefix, prefix, prefix, prefix))
 	return t.Build("slides", true, img, &css, &js)
 }
+
+func (t *templates) BuildVideo(dir string) *zero.One {
+	prefix := t.AddPath(dir)
+	video := t.Video("")
+	css := t.CSS(t.VideoCSS())
+	js := t.JS(fmt.Sprintf(`
+(function() {
+    const frame = pathless.frame();
+    const videoEl = frame.querySelector('video');
+    if (!videoEl) return;
+
+    let videos = [];
+    let index = pathless.state().nav || 0;
+
+    async function show(i) {
+        if (!videos.length) return;
+        index = ((i %% videos.length) + videos.length) %% videos.length;
+        pathless.update("nav", index);
+
+        const video = videos[index];
+        videoEl.src = apiUrl + '/%s/' + video;
+        videoEl.load();
+    }
+
+    pathless.fetch(apiUrl + '/%s/order', { key: '%s.order' })
+        .then(({ data }) => {
+            videos = data || [];
+            if (videos.length) show(index);
+        });
+
+    pathless.keybind((k) => {
+        k = k.toLowerCase();
+        if (k === ' ') {
+            videoEl.paused ? videoEl.play() : videoEl.pause();
+        } else if (k === 'a') {
+            show(index - 1);
+        } else if (k === 'd') {
+            show(index + 1);
+        } else if (k === 'w') {
+            videoEl.playbackRate = Math.min(videoEl.playbackRate + 0.25, 4);
+        } else if (k === 's') {
+            videoEl.playbackRate = Math.max(videoEl.playbackRate - 0.25, 0.25);
+        } else if (k === 'x') {
+            videoEl.volume = Math.min(videoEl.volume + 0.1, 1);
+        } else if (k === 'c') {
+            videoEl.volume = Math.max(videoEl.volume - 0.1, 0);
+        }
+    });
+})();
+    `, prefix, prefix, prefix))
+	return t.Build("video", true, video, &css, &js)
+}

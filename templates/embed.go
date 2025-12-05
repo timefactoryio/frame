@@ -17,18 +17,26 @@ var textCSS string
 //go:embed css/keyboard.css
 var keyboardCSS string
 
+//go:embed css/video.css
+var videoCSS string
+
 type Style interface {
 	ZeroCSS() string
 	SlidesCSS() string
 	FooterCSS() string
 	TextCSS() string
 	KeyboardCSS() string
+	VideoCSS() string
 }
 
 type style struct{}
 
 func NewStyle() Style {
 	return &style{}
+}
+
+func (s *style) VideoCSS() string {
+	return videoCSS
 }
 
 func (s *style) ZeroCSS() string {
