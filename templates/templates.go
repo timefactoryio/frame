@@ -180,9 +180,10 @@ func (t *templates) BuildVideo(dir string) *zero.One {
         pathless.update("nav", index);
 
         const video = videos[index];
-        videoEl.src = apiUrl + '/%s/' + video;
+        videoEl.src = apiUrl + '/%s/' + video + '#t=0.1';
         videoEl.load();
     }
+
 
     pathless.fetch(apiUrl + '/%s/order', { key: '%s.order' })
         .then(({ data }) => {

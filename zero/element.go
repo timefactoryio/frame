@@ -192,7 +192,12 @@ func (e *element) List(items []any, ordered bool) *One {
 }
 
 func (e *element) Video(src string) *One {
-	o := One(template.HTML(fmt.Sprintf(`<video src="%s"></video>`, html.EscapeString(src))))
+	o := One(template.HTML(fmt.Sprintf(`<video src="%s" preload="metadata"></video>`, html.EscapeString(src))))
+	return &o
+}
+
+func (e *element) Source(src string) *One {
+	o := One(template.HTML(fmt.Sprintf(`<source src="%s"/>`, html.EscapeString(src))))
 	return &o
 }
 
@@ -208,11 +213,6 @@ func (e *element) Iframe(src string) *One {
 
 func (e *element) Embed(src string) *One {
 	o := One(template.HTML(fmt.Sprintf(`<embed src="%s"/>`, html.EscapeString(src))))
-	return &o
-}
-
-func (e *element) Source(src string) *One {
-	o := One(template.HTML(fmt.Sprintf(`<source src="%s"/>`, html.EscapeString(src))))
 	return &o
 }
 
