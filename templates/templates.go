@@ -167,24 +167,15 @@ func (t *templates) BuildVideo(dir string) *zero.One {
 	css := t.CSS(t.VideoCSS())
 	js := t.JS(fmt.Sprintf(`
 (function() {
-    const space = pathless.space();
-    const frame = pathless.frame();
-    const el = frame.querySelector('video');
+    const el = pathless.frame().querySelector('video');
     if (!el) return;
 
     let list = [];
     let i = pathless.state().nav || 0;
+    let rHeld = false;
     const tKey = (n) => '%s.t.' + n;
 
     const save = () => el.src && !isNaN(el.currentTime) && pathless.update(tKey(i), el.currentTime);
-
-    const cleanup = () => {
-        save();
-        el.pause();
-        el.src = '';
-        el.load();
-        document.removeEventListener('keydown', onKeydown);
-    };
 
     const show = (n) => {
         if (!list.length) return;
@@ -200,40 +191,46 @@ func (t *templates) BuildVideo(dir string) *zero.One {
 
     el.addEventListener('timeupdate', save);
 
-    const observer = new MutationObserver((mutations) => {
-        for (const m of mutations) {
-            for (const node of m.removedNodes) {
-                if (node === frame || node.contains?.(el)) {
-                    cleanup();
-                    observer.disconnect();
-                    return;
-                }
-            }
-        }
-    });
-    observer.observe(space, { childList: true, subtree: true });
-
-    const isFocused = () => pathless.space() === space;
-
     const onKeydown = (e) => {
-        if (!isFocused()) return;
+        if (e.key === 'r') rHeld = true;
         if (e.key === ' ') {
             e.preventDefault();
             el.paused ? el.play().catch(() => {}) : el.pause();
         }
     };
+    const onKeyup = (e) => {
+        if (e.key === 'r') rHeld = false;
+    };
     document.addEventListener('keydown', onKeydown);
+    document.addEventListener('keyup', onKeyup);
+
+    pathless.cleanup(() => {
+        save();
+        el.pause();
+        el.src = '';
+        document.removeEventListener('keydown', onKeydown);
+        document.removeEventListener('keyup', onKeyup);
+    });
 
     pathless.keybind((k) => {
-        const m = {
-            a: () => show(i - 1),
-            d: () => show(i + 1),
-            w: () => el.volume = Math.min(el.volume + 0.1, 1),
-            s: () => el.volume = Math.max(el.volume - 0.1, 0),
-            x: () => el.playbackRate = Math.min(el.playbackRate + 0.25, 4),
-            c: () => el.playbackRate = Math.max(el.playbackRate - 0.25, 0.25),
-        };
-        m[k.toLowerCase()]?.();
+        k = k.toLowerCase();
+        if (rHeld) {
+            const m = {
+                w: () => el.playbackRate = Math.min(el.playbackRate + 0.25, 4),
+                s: () => el.playbackRate = Math.max(el.playbackRate - 0.25, 0.25),
+                a: () => el.currentTime = Math.max(el.currentTime - 5, 0),
+                d: () => el.currentTime = Math.min(el.currentTime + 5, el.duration || 0),
+            };
+            m[k]?.();
+        } else {
+            const m = {
+                a: () => show(i - 1),
+                d: () => show(i + 1),
+                w: () => el.volume = Math.min(el.volume + 0.1, 1),
+                s: () => el.volume = Math.max(el.volume - 0.1, 0),
+            };
+            m[k]?.();
+        }
     });
 })();
     `, prefix, prefix, prefix, prefix))
