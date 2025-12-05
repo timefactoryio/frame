@@ -174,22 +174,39 @@ func (t *templates) BuildVideo(dir string) *zero.One {
     let videos = [];
     let index = pathless.state().nav || 0;
 
+    function timeKey(i) {
+        return '%s.time.' + i;
+    }
+
+    function saveTime() {
+        if (videoEl.src && !isNaN(videoEl.currentTime)) {
+            pathless.update(timeKey(index), videoEl.currentTime);
+        }
+    }
+
     async function show(i) {
         if (!videos.length) return;
+        saveTime();
         index = ((i %% videos.length) + videos.length) %% videos.length;
         pathless.update("nav", index);
 
         const video = videos[index];
-        videoEl.src = apiUrl + '/%s/' + video + '#t=0.1';
+        const savedTime = pathless.state()[timeKey(index)] || 0;
+        videoEl.src = apiUrl + '/%s/' + video + '#t=' + savedTime;
         videoEl.load();
     }
-
 
     pathless.fetch(apiUrl + '/%s/order', { key: '%s.order' })
         .then(({ data }) => {
             videos = data || [];
             if (videos.length) show(index);
         });
+
+    // Save time periodically
+    videoEl.addEventListener('timeupdate', saveTime);
+
+    // Save time when leaving the frame
+    window.addEventListener('beforeunload', saveTime);
 
     document.addEventListener('keydown', (e) => {
         if (e.key === ' ') {
@@ -208,17 +225,17 @@ func (t *templates) BuildVideo(dir string) *zero.One {
             show(index - 1);
         } else if (k === 'd') {
             show(index + 1);
-        } else if (k === 'w') {
-            videoEl.playbackRate = Math.min(videoEl.playbackRate + 0.25, 4);
-        } else if (k === 's') {
-            videoEl.playbackRate = Math.max(videoEl.playbackRate - 0.25, 0.25);
         } else if (k === 'x') {
-            videoEl.volume = Math.min(videoEl.volume + 0.1, 1);
+            videoEl.playbackRate = Math.min(videoEl.playbackRate + 0.25, 4);
         } else if (k === 'c') {
+            videoEl.playbackRate = Math.max(videoEl.playbackRate - 0.25, 0.25);
+        } else if (k === 'w') {
+            videoEl.volume = Math.min(videoEl.volume + 0.1, 1);
+        } else if (k === 's') {
             videoEl.volume = Math.max(videoEl.volume - 0.1, 0);
         }
     });
 })();
-    `, prefix, prefix, prefix))
+    `, prefix, prefix, prefix, prefix))
 	return t.Build("video", true, video, &css, &js)
 }
