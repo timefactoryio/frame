@@ -190,11 +190,20 @@ func (t *templates) BuildVideo(dir string) *zero.One {
             if (videos.length) show(index);
         });
 
+    document.addEventListener('keydown', (e) => {
+        if (e.key === ' ') {
+            e.preventDefault();
+            if (videoEl.paused) {
+                videoEl.play().catch(() => {});
+            } else {
+                videoEl.pause();
+            }
+        }
+    });
+
     pathless.keybind((k) => {
         k = k.toLowerCase();
-        if (k === ' ') {
-            videoEl.paused ? videoEl.play() : videoEl.pause();
-        } else if (k === 'a') {
+        if (k === 'a') {
             show(index - 1);
         } else if (k === 'd') {
             show(index + 1);
