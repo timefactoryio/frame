@@ -176,19 +176,15 @@ func (t *templates) BuildVideo(filePath string) *zero.One {
 
     el.volume = 1;
     el.src = apiUrl + '/video/%s#t=' + (pathless.state().t || 0);
+    el.load();
 
-    const onKey = (e) => {
-        if (e.key === ' ') {
-            e.preventDefault();
-            el.paused ? el.play().catch(() => {}) : el.pause();
-        }
-    };
-    document.addEventListener('keydown', onKey);
+    pathless.keybind((k) => {
+        if (k === ' ') el.paused ? el.play().catch(() => {}) : el.pause();
+    });
 
     pathless.cleanup(() => {
         pathless.update('t', el.currentTime || 0);
         el.pause();
-        document.removeEventListener('keydown', onKey);
     });
 })();
     `, name))
