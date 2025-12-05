@@ -177,6 +177,13 @@ func (t *templates) BuildVideo(dir string) *zero.One {
 
     const save = () => el.src && !isNaN(el.currentTime) && pathless.update(tKey(i), el.currentTime);
 
+    const cleanup = () => {
+        save();
+        el.pause();
+        el.src = '';
+        el.load();
+    };
+
     const show = (n) => {
         if (!list.length) return;
         save();
@@ -190,14 +197,27 @@ func (t *templates) BuildVideo(dir string) *zero.One {
         .then(({ data }) => { list = data || []; if (list.length) show(i); });
 
     el.addEventListener('timeupdate', save);
-    window.addEventListener('beforeunload', save);
 
-    document.addEventListener('keydown', (e) => {
+    const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            for (const node of m.removedNodes) {
+                if (node === frame || node.contains?.(el)) {
+                    cleanup();
+                    observer.disconnect();
+                    return;
+                }
+            }
+        }
+    });
+    observer.observe(pathless.space(), { childList: true, subtree: true });
+
+    const onKeydown = (e) => {
         if (e.key === ' ') {
             e.preventDefault();
             el.paused ? el.play().catch(() => {}) : el.pause();
         }
-    });
+    };
+    document.addEventListener('keydown', onKeydown);
 
     pathless.keybind((k) => {
         const m = {
