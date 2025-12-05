@@ -174,12 +174,23 @@ func (t *templates) BuildVideo(filePath string) *zero.One {
     const el = pathless.frame().querySelector('video');
     if (!el) return;
 
+    const state = pathless.state();
     el.volume = 1;
-    el.src = apiUrl + '/video/%s#t=' + (pathless.state().t || 0);
+    el.src = apiUrl + '/video/%s#t=' + (state.t || 0);
     el.load();
 
+    if (!state.paused) el.play().catch(() => {});
+
     pathless.keybind((k) => {
-        if (k === ' ') el.paused ? el.play().catch(() => {}) : el.pause();
+        if (k === ' ') {
+            if (el.paused) {
+                el.play().catch(() => {});
+                pathless.update('paused', false);
+            } else {
+                el.pause();
+                pathless.update('paused', true);
+            }
+        }
     });
 
     pathless.cleanup(() => {
