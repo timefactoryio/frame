@@ -192,7 +192,7 @@ func (e *element) List(items []any, ordered bool) *One {
 }
 
 func (e *element) Video(src string) *One {
-	o := One(template.HTML(fmt.Sprintf(`<video src="%s" preload="metadata"></video>`, html.EscapeString(src))))
+	o := One(template.HTML(fmt.Sprintf(`<video src="%s"></video>`, html.EscapeString(src))))
 	return &o
 }
 
