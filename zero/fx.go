@@ -89,7 +89,11 @@ func (f *fx) AddFile(filePath string, prefix string) error {
 	contentType := f.getType(base, fileData)
 	routePath := "/" + strings.Trim(prefix, "/") + "/" + name
 
-	f.addRoute(routePath, fileData, contentType)
+	if strings.HasPrefix(contentType, "video/") {
+		f.addVideoRoute(routePath, fileData, contentType)
+	} else {
+		f.addRoute(routePath, fileData, contentType)
+	}
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"path/filepath"
 	"strings"
 
 	"github.com/timefactoryio/frame/zero"
@@ -161,8 +162,11 @@ func (t *templates) BuildSlides(dir string) *zero.One {
 	return t.Build("slides", true, img, &css, &js)
 }
 
-func (t *templates) BuildVideo(dir string) *zero.One {
-	prefix := t.AddPath(dir)
+func (t *templates) BuildVideo(filePath string) *zero.One {
+	t.AddFile(filePath, "video")
+	name := filepath.Base(filePath)
+	name = name[:len(name)-len(filepath.Ext(name))]
+
 	video := t.Video("")
 	css := t.CSS(t.VideoCSS())
 	js := t.JS(fmt.Sprintf(`
@@ -171,35 +175,22 @@ func (t *templates) BuildVideo(dir string) *zero.One {
     if (!el) return;
 
     el.volume = 1;
-    let list = [];
-    let i = pathless.state().nav || 0;
+    el.src = apiUrl + '/video/%s#t=' + (pathless.state().t || 0);
 
-    const show = (n) => {
-        if (!list.length) return;
-        pathless.update('t' + i, el.currentTime || 0);
-        i = ((n %% list.length) + list.length) %% list.length;
-        pathless.update('nav', i);
-        el.src = apiUrl + '/%s/' + list[i] + '#t=' + (pathless.state()['t' + i] || 0);
-        el.load();
+    const onKey = (e) => {
+        if (e.key === ' ') {
+            e.preventDefault();
+            el.paused ? el.play().catch(() => {}) : el.pause();
+        }
     };
-
-    pathless.fetch(apiUrl + '/%s/order', { key: '%s.order' })
-        .then(({ data }) => { list = data || []; if (list.length) show(i); });
+    document.addEventListener('keydown', onKey);
 
     pathless.cleanup(() => {
-        pathless.update('t' + i, el.currentTime || 0);
+        pathless.update('t', el.currentTime || 0);
         el.pause();
-    });
-
-    pathless.keybind((k) => {
-        const m = {
-            a: () => show(i - 1),
-            d: () => show(i + 1),
-            x: () => el.paused ? el.play().catch(() => {}) : el.pause(),
-        };
-        m[k.toLowerCase()]?.();
+        document.removeEventListener('keydown', onKey);
     });
 })();
-    `, prefix, prefix, prefix))
+    `, name))
 	return t.Build("video", true, video, &css, &js)
 }
