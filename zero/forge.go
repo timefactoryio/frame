@@ -1,6 +1,7 @@
 package zero
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
 	"html/template"
@@ -36,6 +37,7 @@ type Forge interface {
 	Count() int
 	HandleFrame(w http.ResponseWriter, r *http.Request)
 	HandleFrames(w http.ResponseWriter, r *http.Request)
+	HandleAllFrames(w http.ResponseWriter, r *http.Request)
 }
 
 func (f *forge) GetFrame(idx int) *One {
@@ -145,6 +147,19 @@ func (f *forge) HandleFrames(w http.ResponseWriter, r *http.Request) {
 	if frame != nil {
 		io.WriteString(w, string(*frame))
 	}
+}
+
+// HandleAllFrames serves /frames/all and returns all frames as a JSON array.
+func (f *forge) HandleAllFrames(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Frames", strconv.Itoa(f.Count()))
+	frames := make([]string, 0, f.Count())
+	for _, frame := range f.index {
+		if frame != nil {
+			frames = append(frames, string(*frame))
+		}
+	}
+	json.NewEncoder(w).Encode(frames)
 }
 
 // func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {

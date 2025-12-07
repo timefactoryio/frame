@@ -20,5 +20,6 @@ func NewZero(pathlessUrl, apiUrl string) Zero {
 	}
 	z.Router().HandleFunc("/frame", z.HandleFrame).Methods("GET")
 	z.Router().HandleFunc("/frame/{index}", z.HandleFrames).Methods("GET")
+	z.Router().HandleFunc("/frames", z.HandleAllFrames).Methods("GET")
 	return z
 }
