@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"html"
 	"html/template"
+	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 type One template.HTML
@@ -32,6 +35,7 @@ type Forge interface {
 	Frames() int
 	Count() int
 	HandleFrame(w http.ResponseWriter, r *http.Request)
+	HandleFrames(w http.ResponseWriter, r *http.Request)
 }
 
 func (f *forge) GetFrame(idx int) *One {
@@ -119,20 +123,44 @@ func (f *forge) Count() int {
 	return int(len(f.index))
 }
 
+// HandleFrameZero serves /frame and returns frame 0 with X-Frames header.
 func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("X-Frames", strconv.Itoa(f.Count()))
-
-	current := 0
-	if v := r.Header.Get("X-Frame"); v != "" {
-		i, err := strconv.Atoi(v)
-		if err == nil && i >= 0 && i < f.Count() {
-			current = i
-		}
-	}
-	w.Header().Set("X-Frame", strconv.Itoa(current))
-	frame := f.GetFrame(current)
+	frame := f.GetFrame(0)
 	if frame != nil {
-		fmt.Fprint(w, *frame)
+		io.WriteString(w, string(*frame))
 	}
 }
+
+func (f *forge) HandleFrames(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	vars := mux.Vars(r)
+	indexStr := vars["index"]
+	i, err := strconv.Atoi(indexStr)
+	if err != nil || i < 0 || i >= f.Count() {
+		i = 0
+	}
+	frame := f.GetFrame(i)
+	if frame != nil {
+		io.WriteString(w, string(*frame))
+	}
+}
+
+// func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+// 	w.Header().Set("X-Frames", strconv.Itoa(f.Count()))
+
+// 	current := 0
+// 	if v := r.Header.Get("X-Frame"); v != "" {
+// 		i, err := strconv.Atoi(v)
+// 		if err == nil && i >= 0 && i < f.Count() {
+// 			current = i
+// 		}
+// 	}
+// 	w.Header().Set("X-Frame", strconv.Itoa(current))
+// 	frame := f.GetFrame(current)
+// 	if frame != nil {
+// 		fmt.Fprint(w, *frame)
+// 	}
+// }
