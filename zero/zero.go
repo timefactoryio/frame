@@ -6,20 +6,18 @@ type Zero interface {
 	Element
 }
 
-type zeroImpl struct {
+type zero struct {
 	Fx
 	Forge
 	Element
 }
 
 func NewZero(pathlessUrl, apiUrl string) Zero {
-	z := &zeroImpl{
+	z := &zero{
 		Fx:      NewFx(pathlessUrl, apiUrl).(*fx),
 		Forge:   NewForge().(*forge),
 		Element: NewElement().(*element),
 	}
 	z.Router().HandleFunc("/frame", z.HandleFrame).Methods("GET")
-	z.Router().HandleFunc("/frame/{index}", z.HandleFrames).Methods("GET")
-	z.Router().HandleFunc("/frames", z.HandleAllFrames).Methods("GET")
 	return z
 }

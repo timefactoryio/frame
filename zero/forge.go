@@ -5,26 +5,23 @@ import (
 	"fmt"
 	"html"
 	"html/template"
-	"io"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
 type One template.HTML
 
 func NewForge() Forge {
 	f := &forge{
-		index: make([]*One, 0),
+		frames: make([]*One, 0),
 	}
 	return f
 }
 
 type forge struct {
-	index []*One
+	frames []*One
+	json   []byte
 }
 
 type Forge interface {
@@ -32,19 +29,8 @@ type Forge interface {
 	JS(js string) One
 	CSS(css string) One
 	UpdateIndex(*One)
-	GetFrame(idx int) *One
-	Frames() int
-	Count() int
+	Frames() []byte
 	HandleFrame(w http.ResponseWriter, r *http.Request)
-	HandleFrames(w http.ResponseWriter, r *http.Request)
-	HandleAllFrames(w http.ResponseWriter, r *http.Request)
-}
-
-func (f *forge) GetFrame(idx int) *One {
-	if idx < 0 || idx >= len(f.index) {
-		return nil
-	}
-	return f.index[idx]
 }
 
 func (f *forge) Build(class string, updateIndex bool, elements ...*One) *One {
@@ -113,69 +99,23 @@ func (f *forge) CSS(css string) One {
 	return One(template.HTML(b.String()))
 }
 
-func (f *forge) Frames() int {
-	return int(len(f.index))
+func (f *forge) Frames() []byte {
+	return f.json
 }
 
 func (f *forge) UpdateIndex(frame *One) {
-	f.index = append(f.index, frame)
-}
-
-func (f *forge) Count() int {
-	return int(len(f.index))
-}
-
-// HandleFrameZero serves /frame and returns frame 0 with X-Frames header.
-func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("X-Frames", strconv.Itoa(f.Count()))
-	frame := f.GetFrame(0)
 	if frame != nil {
-		io.WriteString(w, string(*frame))
-	}
-}
-
-func (f *forge) HandleFrames(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	vars := mux.Vars(r)
-	indexStr := vars["index"]
-	i, err := strconv.Atoi(indexStr)
-	if err != nil || i < 0 || i >= f.Count() {
-		i = 0
-	}
-	frame := f.GetFrame(i)
-	if frame != nil {
-		io.WriteString(w, string(*frame))
-	}
-}
-
-// HandleAllFrames serves /frames/all and returns all frames as a JSON array.
-func (f *forge) HandleAllFrames(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Frames", strconv.Itoa(f.Count()))
-	frames := make([]string, 0, f.Count())
-	for _, frame := range f.index {
-		if frame != nil {
-			frames = append(frames, string(*frame))
+		f.frames = append(f.frames, frame)
+		frames := make([]string, len(f.frames))
+		for i, fr := range f.frames {
+			frames[i] = string(*fr)
 		}
+		f.json, _ = json.Marshal(frames)
 	}
-	json.NewEncoder(w).Encode(frames)
 }
 
-// func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-// 	w.Header().Set("X-Frames", strconv.Itoa(f.Count()))
-
-// 	current := 0
-// 	if v := r.Header.Get("X-Frame"); v != "" {
-// 		i, err := strconv.Atoi(v)
-// 		if err == nil && i >= 0 && i < f.Count() {
-// 			current = i
-// 		}
-// 	}
-// 	w.Header().Set("X-Frame", strconv.Itoa(current))
-// 	frame := f.GetFrame(current)
-// 	if frame != nil {
-// 		fmt.Fprint(w, *frame)
-// 	}
-// }
+// return JSON array with all frames
+func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Write(f.Frames())
+}
