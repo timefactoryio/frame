@@ -141,7 +141,7 @@ func (t *templates) BuildSlides(dir string) *zero.One {
       });
   }
 
-  pathless.fetch(window.apiUrl + '/%s/order')
+  pathless.fetch(window.apiUrl + '/%s')
     .then(({ data }) => {
       slides = data || [];
       if (slides.length) show(index);

@@ -3,9 +3,7 @@ package zero
 import (
 	"bytes"
 	"compress/gzip"
-	"embed"
 	"io"
-	"io/fs"
 	"mime"
 	"net/http"
 	"os"
@@ -20,7 +18,7 @@ import (
 type Fx interface {
 	AddFile(filePath string, prefix string) error
 	AddPath(dir string) string
-	EmbedPath(efs embed.FS, root string) error
+	// EmbedPath(efs embed.FS, root string) error
 	Pathless() string
 	Api() string
 	Serve()
@@ -89,63 +87,71 @@ func (f *fx) AddFile(filePath string, prefix string) error {
 	contentType := f.getType(base, fileData)
 	routePath := "/" + strings.Trim(prefix, "/") + "/" + name
 
-	if strings.HasPrefix(contentType, "video/") {
-		f.addVideoRoute(routePath, fileData, contentType)
-	} else {
-		f.addRoute(routePath, fileData, contentType)
-	}
+	compress := !strings.HasPrefix(contentType, "video/")
+	f.addRoute(routePath, fileData, contentType, compress)
 	return nil
 }
 
 // Walk directory and load files into memory, determine Content-Type based on file extension, register routes as /<dirname>/<file without extension>
 func (f *fx) AddPath(dir string) string {
 	prefix := filepath.Base(dir)
+	var orderData []byte
+	var orderContentType string
+
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return err
 		}
 
-		fileData, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
 		base := filepath.Base(path)
 		name := base[:len(base)-len(filepath.Ext(base))]
-		contentType := f.getType(base, fileData)
-		routePath := "/" + prefix + "/" + name
+		contentType := f.getType(base, nil)
 
-		if strings.HasPrefix(contentType, "video/") {
-			f.addVideoRoute(routePath, fileData, contentType)
+		if base == "sort.json" {
+			orderData, _ = os.ReadFile(path)
+			orderContentType = contentType
 		} else {
-			f.addRoute(routePath, fileData, contentType)
+			fileData, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			contentType = f.getType(base, fileData)
+			routePath := "/" + prefix + "/" + name
+			compress := !strings.HasPrefix(contentType, "video/")
+			f.addRoute(routePath, fileData, contentType, compress)
 		}
 		return nil
 	})
+
+	if orderData != nil {
+		routePath := "/" + prefix
+		compress := !strings.HasPrefix(orderContentType, "video/")
+		f.addRoute(routePath, orderData, orderContentType, compress)
+	}
 	return prefix
 }
 
 // New method for embedded filesystem
-func (f *fx) EmbedPath(efs embed.FS, root string) error {
-	return fs.WalkDir(efs, root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
+// func (f *fx) EmbedPath(efs embed.FS, root string) error {
+// 	return fs.WalkDir(efs, root, func(path string, d fs.DirEntry, err error) error {
+// 		if err != nil || d.IsDir() {
+// 			return err
+// 		}
 
-		fileData, err := efs.ReadFile(path)
-		if err != nil {
-			return err
-		}
+// 		fileData, err := efs.ReadFile(path)
+// 		if err != nil {
+// 			return err
+// 		}
 
-		base := filepath.Base(path)
-		name := base[:len(base)-len(filepath.Ext(base))]
-		contentType := f.getType(base, fileData)
-		routePath := "/" + filepath.Base(root) + "/" + name
+// 		base := filepath.Base(path)
+// 		name := base[:len(base)-len(filepath.Ext(base))]
+// 		contentType := f.getType(base, fileData)
+// 		routePath := "/" + filepath.Base(root) + "/" + name
 
-		f.addRoute(routePath, fileData, contentType)
-		return nil
-	})
-}
+// 		f.addRoute(routePath, fileData, contentType)
+// 		return nil
+// 	})
+// }
 
 func (f *fx) getType(filename string, data []byte) string {
 	contentType := mime.TypeByExtension(filepath.Ext(filename))
@@ -155,24 +161,19 @@ func (f *fx) getType(filename string, data []byte) string {
 	return contentType
 }
 
-func (f *fx) addRoute(path string, data []byte, contentType string) {
-	var buf bytes.Buffer
-	gzipWriter := gzip.NewWriter(&buf)
-	gzipWriter.Write(data)
-	gzipWriter.Close()
-	zipped := buf.Bytes()
-
-	f.Router().HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Encoding", "gzip")
-		w.Header().Set("Content-Type", contentType)
-		w.Write(zipped)
-	})
-}
-
-func (f *fx) addVideoRoute(path string, data []byte, contentType string) {
+func (f *fx) addRoute(path string, data []byte, contentType string, compress bool) {
 	f.Router().HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", contentType)
-		http.ServeContent(w, r, path, time.Time{}, bytes.NewReader(data))
+		if compress {
+			var buf bytes.Buffer
+			gzipWriter := gzip.NewWriter(&buf)
+			gzipWriter.Write(data)
+			gzipWriter.Close()
+			w.Header().Set("Content-Encoding", "gzip")
+			w.Write(buf.Bytes())
+		} else {
+			http.ServeContent(w, r, path, time.Time{}, bytes.NewReader(data))
+		}
 	})
 }
 

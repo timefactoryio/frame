@@ -10,9 +10,6 @@ func (t *templates) Keyboard() {
 	css := t.CSS(t.KeyboardCSS())
 	js := t.JS(`
 (function(){
-  const { panel } = pathless.context();
-  const keyMap = pathless.keybinds();
-
   const keys = [
     ['Tab', '', ''],
     ['1', '2', '3'],
@@ -20,30 +17,34 @@ func (t *templates) Keyboard() {
     ['a', 's', 'd']
   ];
 
-  const grid = panel.querySelector('.grid');
+  const grid = pathless.space.querySelector('.grid');
   if (!grid) return;
 
   keys.flat().forEach((k) => {
-    const entry = keyMap.get(k);
+    const entry = pathless.keyboard().find(x => x.key === k);
     const keyEl = document.createElement('div');
     keyEl.className = 'key';
     keyEl.dataset.key = k;
     keyEl.textContent = k.toUpperCase();
     if (entry && entry.style) keyEl.style.cssText = entry.style;
+    if (entry && entry.pressed) keyEl.classList.add('pressed');
     grid.appendChild(keyEl);
   });
 
-  const updateKey = (k, pressed) => {
-    const keyEl = grid.querySelector('[data-key="' + k + '"]');
-    if (keyEl) keyEl.classList.toggle('pressed', pressed);
-  };
-
   document.addEventListener('keydown', (e) => {
-    if (keyMap.has(e.key)) updateKey(e.key, true);
+    const entry = pathless.keyboard().find(x => x.key === e.key);
+    if (entry) {
+      const keyEl = grid.querySelector('[data-key="' + e.key + '"]');
+      if (keyEl) keyEl.classList.add('pressed');
+    }
   });
 
   document.addEventListener('keyup', (e) => {
-    if (keyMap.has(e.key)) updateKey(e.key, false);
+    const entry = pathless.keyboard().find(x => x.key === e.key);
+    if (entry) {
+      const keyEl = grid.querySelector('[data-key="' + e.key + '"]');
+      if (keyEl) keyEl.classList.remove('pressed');
+    }
   });
 })();
 `)
