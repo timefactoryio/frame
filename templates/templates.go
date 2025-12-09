@@ -84,16 +84,29 @@ func (t *templates) Scroll() *zero.One {
   frame.addEventListener('scroll', () => pathless.update(key, frame.scrollTop));
 
   let speed = 0;
-  const scroll = () => {
-    if (!speed) return;
+  let scrolling = false;
+
+  function scroll() {
+    if (speed === 0) {
+      scrolling = false;
+      return;
+    }
     frame.scrollBy({ top: speed });
     requestAnimationFrame(scroll);
-  };
+  }
 
-  pathless.onKey('w', () => { speed = -20; scroll(); }, () => { speed = 0; });
-  pathless.onKey('s', () => { speed = 20; scroll(); }, () => { speed = 0; });
-  pathless.onKey('a', () => { speed = -40; scroll(); }, () => { speed = 0; });
-  pathless.onKey('d', () => { speed = 40; scroll(); }, () => { speed = 0; });
+  function startScroll(newSpeed) {
+    speed = newSpeed;
+    if (!scrolling) {
+      scrolling = true;
+      scroll();
+    }
+  }
+
+  pathless.onKey('w', () => startScroll(-20), () => { speed = 0; });
+  pathless.onKey('s', () => startScroll(20), () => { speed = 0; });
+  pathless.onKey('a', () => startScroll(-40), () => { speed = 0; });
+  pathless.onKey('d', () => startScroll(40), () => { speed = 0; });
 })();
 `)
 	return &js
@@ -102,6 +115,7 @@ func (t *templates) Scroll() *zero.One {
 func (t *templates) BuildSlides(dir string) *zero.One {
 	prefix := t.AddPath(dir)
 	css := t.CSS(t.SlidesCSS())
+	img := t.Img("", "")
 	js := t.JS(fmt.Sprintf(`
 (function() {
   const frame = pathless.frame();
@@ -113,20 +127,21 @@ func (t *templates) BuildSlides(dir string) *zero.One {
     index = ((i %% slides.length) + slides.length) %% slides.length;
     pathless.update(%q, index);
 
-    const imgEl = frame.querySelector('img');
-    if (!imgEl) return;
+    const img = frame.querySelector('img');
+    if (!img) return;
 
     const slide = slides[index];
-    try {
-      const { data } = await pathless.fetch(apiUrl + '/%s/' + slide);
-      imgEl.src = data;
-      imgEl.alt = slide;
-    } catch {
-      imgEl.alt = "Failed to load image";
-    }
+    pathless.fetch(window.apiUrl + '/%s/' + slide)
+      .then(({ data }) => {
+        img.src = data;
+        img.alt = slide;
+      })
+      .catch(() => {
+        img.alt = "Failed to load image";
+      });
   }
 
-  pathless.fetch(apiUrl + '/%s/order')
+  pathless.fetch(window.apiUrl + '/%s/order')
     .then(({ data }) => {
       slides = data || [];
       if (slides.length) show(index);
@@ -136,7 +151,7 @@ func (t *templates) BuildSlides(dir string) *zero.One {
   pathless.onKey('d', () => show(index + 1));
 })();
 `, prefix, prefix, prefix, prefix))
-	return t.Build("slides", true, t.Img("", ""), &css, &js)
+	return t.Build("slides", true, img, &css, &js)
 }
 
 func (t *templates) BuildVideo(filePath string) *zero.One {
