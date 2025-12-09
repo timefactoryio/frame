@@ -16,7 +16,7 @@ func (t *templates) Home(heading, github, x string) {
 	h1 := t.H1(heading)
 	css := t.CSS(t.HomeCSS())
 	footer := t.buildFooter(github, x)
-	t.Build("home", true, &css, img, h1, footer)
+	t.Build("home", true, img, h1, footer, &css)
 }
 
 func (t *templates) buildFooter(github, x string) *zero.One {
