@@ -75,91 +75,68 @@ func (t *templates) README(content []byte) *zero.One {
 }
 
 func (t *templates) Scroll() *zero.One {
-	js := `
+	js := t.JS(`
 (function(){
   const frame = pathless.frame();
   const key = 'scroll';
-  
+
   frame.scrollTop = pathless.state()[key] || 0;
-  frame.addEventListener('scroll', () => {
-    pathless.update(key, frame.scrollTop);
-  });
-  
+  frame.addEventListener('scroll', () => pathless.update(key, frame.scrollTop));
+
   let speed = 0;
-  let isScrolling = false;
-  
   const scroll = () => {
-    if (speed === 0) {
-      isScrolling = false;
-      return;
-    }
+    if (!speed) return;
     frame.scrollBy({ top: speed });
     requestAnimationFrame(scroll);
   };
-  
-  const speeds = { w: -20, s: 20, a: -40, d: 40 };
-  pathless.keybind((k) => {
-    if (speeds[k]) {
-      speed = speeds[k];
-      if (!isScrolling) {
-        isScrolling = true;
-        scroll();
-      }
-    }
-  });
-  
-  document.addEventListener('keyup', (e) => {
-    if (speeds[e.key]) speed = 0;
-  });
+
+  pathless.onKey('w', () => { speed = -20; scroll(); }, () => { speed = 0; });
+  pathless.onKey('s', () => { speed = 20; scroll(); }, () => { speed = 0; });
+  pathless.onKey('a', () => { speed = -40; scroll(); }, () => { speed = 0; });
+  pathless.onKey('d', () => { speed = 40; scroll(); }, () => { speed = 0; });
 })();
-`
-	result := zero.One(template.HTML(fmt.Sprintf(`<script>%s</script>`, js)))
-	return &result
+`)
+	return &js
 }
 
 func (t *templates) BuildSlides(dir string) *zero.One {
 	prefix := t.AddPath(dir)
-	img := t.Img("", "")
 	css := t.CSS(t.SlidesCSS())
 	js := t.JS(fmt.Sprintf(`
 (function() {
-    const frame = pathless.frame();
-    let slides = [];
-    let index = pathless.state().nav || 0;
+  const frame = pathless.frame();
+  let slides = [];
+  let index = pathless.state()[%q] || 0;
 
-    async function show(i) {
-        if (!slides.length) return;
-        index = ((i %% slides.length) + slides.length) %% slides.length;
-        pathless.update("nav", index);
+  async function show(i) {
+    if (!slides.length) return;
+    index = ((i %% slides.length) + slides.length) %% slides.length;
+    pathless.update(%q, index);
 
-        const imgEl = frame.querySelector('img');
-        if (!imgEl) return;
+    const imgEl = frame.querySelector('img');
+    if (!imgEl) return;
 
-        const slide = slides[index];
-        const fetchKey = '%s.' + slide;
-        try {
-            const { data } = await pathless.fetch(apiUrl + '/%s/' + slide, { key: fetchKey });
-            imgEl.src = data;
-            imgEl.alt = slide;
-        } catch (e) {
-            imgEl.alt = "Failed to load image";
-        }
+    const slide = slides[index];
+    try {
+      const { data } = await pathless.fetch(apiUrl + '/%s/' + slide);
+      imgEl.src = data;
+      imgEl.alt = slide;
+    } catch {
+      imgEl.alt = "Failed to load image";
     }
+  }
 
-    pathless.fetch(apiUrl + '/%s/order', { key: '%s.order' })
-        .then(({ data }) => {
-            slides = data || [];
-            if (slides.length) show(index);
-        });
-
-    pathless.keybind((k) => {
-        k = k.toLowerCase();
-        if (k === 'a') show(index - 1);
-        else if (k === 'd') show(index + 1);
+  pathless.fetch(apiUrl + '/%s/order')
+    .then(({ data }) => {
+      slides = data || [];
+      if (slides.length) show(index);
     });
+
+  pathless.onKey('a', () => show(index - 1));
+  pathless.onKey('d', () => show(index + 1));
 })();
-    `, prefix, prefix, prefix, prefix))
-	return t.Build("slides", true, img, &css, &js)
+`, prefix, prefix, prefix, prefix))
+	return t.Build("slides", true, t.Img("", ""), &css, &js)
 }
 
 func (t *templates) BuildVideo(filePath string) *zero.One {
