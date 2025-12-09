@@ -6,7 +6,7 @@ type Templates interface {
 	Style
 	GithubLink(username string) *zero.One
 	XLink(username string) *zero.One
-	Landing(heading, github, x string)
+	Home(heading, github, x string)
 	README(content []byte) *zero.One
 	Scroll() *zero.One
 	BuildSlides(dir string) *zero.One

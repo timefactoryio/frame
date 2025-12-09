@@ -10,13 +10,13 @@ import (
 	"github.com/timefactoryio/frame/zero"
 )
 
-func (t *templates) Landing(heading, github, x string) {
+func (t *templates) Home(heading, github, x string) {
 	logo := t.Api() + "/img/logo"
 	img := t.Img(logo, "logo")
 	h1 := t.H1(heading)
-	css := t.CSS(t.ZeroCSS())
+	css := t.CSS(t.HomeCSS())
 	footer := t.buildFooter(github, x)
-	t.Build("zero", true, &css, img, h1, footer)
+	t.Build("home", true, &css, img, h1, footer)
 }
 
 func (t *templates) buildFooter(github, x string) *zero.One {

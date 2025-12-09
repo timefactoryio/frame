@@ -2,8 +2,8 @@ package templates
 
 import _ "embed"
 
-//go:embed css/zero.css
-var zeroCSS string
+//go:embed css/home.css
+var homeCSS string
 
 //go:embed css/slides.css
 var slidesCSS string
@@ -21,7 +21,7 @@ var keyboardCSS string
 var videoCSS string
 
 type Style interface {
-	ZeroCSS() string
+	HomeCSS() string
 	SlidesCSS() string
 	FooterCSS() string
 	TextCSS() string
@@ -39,8 +39,8 @@ func (s *style) VideoCSS() string {
 	return videoCSS
 }
 
-func (s *style) ZeroCSS() string {
-	return zeroCSS
+func (s *style) HomeCSS() string {
+	return homeCSS
 }
 
 func (s *style) SlidesCSS() string {
