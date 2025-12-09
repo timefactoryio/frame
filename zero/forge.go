@@ -1,6 +1,8 @@
 package zero
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -99,10 +101,6 @@ func (f *forge) CSS(css string) One {
 	return One(template.HTML(b.String()))
 }
 
-func (f *forge) Frames() []byte {
-	return f.json
-}
-
 func (f *forge) UpdateIndex(frame *One) {
 	if frame != nil {
 		f.frames = append(f.frames, frame)
@@ -110,12 +108,22 @@ func (f *forge) UpdateIndex(frame *One) {
 		for i, fr := range f.frames {
 			frames[i] = string(*fr)
 		}
-		f.json, _ = json.Marshal(frames)
+		raw, _ := json.Marshal(frames)
+		var buf bytes.Buffer
+		gz := gzip.NewWriter(&buf)
+		_, _ = gz.Write(raw)
+		gz.Close()
+		f.json = buf.Bytes()
 	}
+}
+
+func (f *forge) Frames() []byte {
+	return f.json
 }
 
 // return JSON array with all frames
 func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Encoding", "gzip")
 	w.Write(f.Frames())
 }
