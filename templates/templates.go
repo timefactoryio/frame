@@ -154,6 +154,45 @@ func (t *templates) BuildSlides(dir string) *zero.One {
 	return t.Build("slides", true, img, &css, &js)
 }
 
+func (t *templates) Keyboard(asFrame bool) *zero.One {
+	css := t.CSS(t.KeyboardCSS())
+	js := t.JS(`
+(function(){
+  const keys = [
+    ['tab', '', ''],
+    ['1', '2', '3'],
+    ['q', 'w', 'e'],
+    ['a', 's', 'd']
+  ];
+
+  const space = pathless.space();
+  const grid = space.querySelector('.grid');
+  if (!grid) return;
+
+  function render() {
+    grid.innerHTML = '';
+    const keyboard = pathless.keyboard();
+    
+    keys.flat().forEach((k) => {
+      const entry = keyboard.find(x => x.key === k);
+      const keyEl = document.createElement('div');
+      keyEl.className = 'key';
+      keyEl.dataset.key = k;
+      keyEl.textContent = k.toUpperCase();
+      if (entry?.pressed) keyEl.classList.add('pressed');
+      grid.appendChild(keyEl);
+    });
+  }
+
+  render();
+  window.addEventListener('keyboardchange', render);
+})();
+`)
+	html := zero.One(template.HTML(`<div class="grid"></div>`))
+	final := t.Build("keyboard", asFrame, &html, &css, &js)
+	return final
+}
+
 func (t *templates) BuildVideo(filePath string) *zero.One {
 	t.AddFile(filePath, "video")
 	name := filepath.Base(filePath)
@@ -163,33 +202,43 @@ func (t *templates) BuildVideo(filePath string) *zero.One {
 	css := t.CSS(t.VideoCSS())
 	js := t.JS(fmt.Sprintf(`
 (function() {
-    const el = pathless.frame().querySelector('video');
-    if (!el) return;
+  const frame = pathless.frame();
+  const el = frame.querySelector('video');
+  if (!el) return;
 
-    const state = pathless.state();
-    el.volume = 1;
-    el.src = apiUrl + '/video/%s#t=' + (state.t || 0);
-    el.load();
+  const state = pathless.state();
+  el.volume = 1;
+  el.src = apiUrl + '/video/%s#t=' + (state.t || 0);
+  el.load();
 
-    if (!state.paused) el.play().catch(() => {});
+  if (!state.paused) el.play().catch(() => {});
 
-    pathless.keybind((k) => {
-        if (k === ' ') {
-            if (el.paused) {
-                el.play().catch(() => {});
-                pathless.update('paused', false);
-            } else {
-                el.pause();
-                pathless.update('paused', true);
-            }
-        }
-    });
+  pathless.onKey(' ', () => {
+    if (el.paused) {
+      el.play().catch(() => {});
+      pathless.update('paused', false);
+    } else {
+      el.pause();
+      pathless.update('paused', true);
+    }
+  });
 
-    pathless.cleanup(() => {
-        pathless.update('t', el.currentTime || 0);
-        el.pause();
-    });
+  el.addEventListener('timeupdate', () => {
+    pathless.update('t', el.currentTime || 0);
+  });
+
+  // Cleanup: save time and pause when frame is unloaded
+  window.addEventListener('beforeunload', () => {
+    pathless.update('t', el.currentTime || 0);
+    el.pause();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      pathless.update('t', el.currentTime || 0);
+      el.pause();
+    }
+  });
 })();
-    `, name))
+`, name))
 	return t.Build("video", true, video, &css, &js)
 }

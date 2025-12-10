@@ -11,7 +11,7 @@ type Templates interface {
 	Scroll() *zero.One
 	BuildSlides(dir string) *zero.One
 	BuildVideo(dir string) *zero.One
-	Keyboard()
+	Keyboard(asFrame bool) *zero.One
 }
 
 type templates struct {
