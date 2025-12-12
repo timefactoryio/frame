@@ -77,7 +77,7 @@ func (t *templates) README(content []byte) *zero.One {
 func (t *templates) Scroll() *zero.One {
 	js := t.JS(`
 (function(){
-  const frame = pathless.frame();
+  const frame = pathless.Frame();
   const key = 'scroll';
 
   frame.scrollTop = pathless.read()[key] || 0;
@@ -118,7 +118,7 @@ func (t *templates) BuildSlides(dir string) *zero.One {
 	img := t.Img("", "")
 	js := t.JS(fmt.Sprintf(`
 (function() {
-  const frame = pathless.frame();
+  const frame = pathless.Frame();
   let slides = [];
   let index = pathless.read()[%q] || 0;
 
@@ -165,7 +165,7 @@ func (t *templates) Keyboard(asFrame bool) *zero.One {
     ['a', 's', 'd']
   ];
 
-  const space = pathless.space();
+  const space = pathless.Space();
   const grid = space.querySelector('.grid');
   if (!grid) return;
 
@@ -202,7 +202,7 @@ func (t *templates) BuildVideo(filePath string) *zero.One {
 	css := t.CSS(t.VideoCSS())
 	js := t.JS(fmt.Sprintf(`
 (function() {
-  const frame = pathless.frame();
+  const frame = pathless.Frame();
   const el = frame.querySelector('video');
   if (!el) return;
 
