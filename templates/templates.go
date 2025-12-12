@@ -80,8 +80,8 @@ func (t *templates) Scroll() *zero.One {
   const frame = pathless.frame();
   const key = 'scroll';
 
-  frame.scrollTop = pathless.state()[key] || 0;
-  frame.addEventListener('scroll', () => pathless.update(key, frame.scrollTop));
+  frame.scrollTop = pathless.read()[key] || 0;
+  frame.addEventListener('scroll', () => write(key, frame.scrollTop));
 
   let speed = 0;
   let scrolling = false;
@@ -120,12 +120,12 @@ func (t *templates) BuildSlides(dir string) *zero.One {
 (function() {
   const frame = pathless.frame();
   let slides = [];
-  let index = pathless.state()[%q] || 0;
+  let index = pathless.read()[%q] || 0;
 
   async function show(i) {
     if (!slides.length) return;
     index = ((i %% slides.length) + slides.length) %% slides.length;
-    pathless.update(%q, index);
+    write(%q, index);
 
     const img = frame.querySelector('img');
     if (!img) return;
