@@ -75,6 +75,11 @@ func (e *element) Markdown() *goldmark.Markdown {
 	return e.Md
 }
 
+func (e *element) HTML(html string) *One {
+	o := One(template.HTML(html))
+	return &o
+}
+
 func (e *element) H1(s string) *One        { return Tag("h1", s) }
 func (e *element) H2(s string) *One        { return Tag("h2", s) }
 func (e *element) H3(s string) *One        { return Tag("h3", s) }
