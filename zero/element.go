@@ -15,6 +15,7 @@ import (
 )
 
 type Element interface {
+	HTML(html string) *One
 	Markdown() *goldmark.Markdown
 	H1(s string) *One
 	H2(s string) *One
