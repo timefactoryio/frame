@@ -154,42 +154,15 @@ func (t *templates) BuildSlides(dir string) *zero.One {
 	return t.Build("slides", true, img, &css, &js)
 }
 
-func (t *templates) Keyboard(asFrame bool) *zero.One {
-	css := t.CSS(t.KeyboardCSS())
-	js := t.JS(`
-(function(){
-  const keys = [
-    ['tab', '', ''],
-    ['1', '2', '3'],
-    ['q', 'w', 'e'],
-    ['a', 's', 'd']
-  ];
+func (t *templates) BuildFromHtml(html string) *zero.One {
+	overlay := t.HTML(t.ToString(html))
+	final := t.Build("", true, overlay)
+	return final
+}
 
-  const space = pathless.space();
-  const grid = space.querySelector('.grid');
-  if (!grid) return;
-
-  function render() {
-    grid.innerHTML = '';
-    const keyboard = pathless.keyboard();
-    
-    keys.flat().forEach((k) => {
-      const entry = keyboard.find(x => x.key === k);
-      const keyEl = document.createElement('div');
-      keyEl.className = 'key';
-      keyEl.dataset.key = k;
-      keyEl.textContent = k.toUpperCase();
-      if (entry?.pressed) keyEl.classList.add('pressed');
-      grid.appendChild(keyEl);
-    });
-  }
-
-  render();
-  window.addEventListener('keyboardchange', render);
-})();
-`)
-	html := zero.One(template.HTML(`<div class="grid"></div>`))
-	final := t.Build("keyboard", asFrame, &html, &css, &js)
+func (t *templates) BuildOverlay(html string) *zero.One {
+	overlay := t.HTML(t.ToString(html))
+	final := t.Build("", true, overlay)
 	return final
 }
 
