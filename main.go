@@ -40,5 +40,6 @@ func (f *Frame) HandleHello(w http.ResponseWriter, r *http.Request) {
 	f.Hello["keyboard"] = f.KeyboardBytes()
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Encoding", "gzip")
 	json.NewEncoder(w).Encode(f.Hello)
 }
