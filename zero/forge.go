@@ -1,9 +1,6 @@
 package zero
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/json"
 	"fmt"
 	"html"
 	"html/template"
@@ -15,13 +12,13 @@ type One template.HTML
 
 func NewForge() Forge {
 	f := &forge{
-		frames: []byte{},
+		frames: []*One{},
 	}
 	return f
 }
 
 type forge struct {
-	frames []byte
+	frames []*One
 }
 
 type Forge interface {
@@ -29,8 +26,7 @@ type Forge interface {
 	JS(js string) One
 	CSS(css string) One
 	UpdateIndex(*One)
-	Frames() []byte
-	Compress(data []byte) []byte
+	Frames() []*One
 }
 
 func (f *forge) Build(class string, updateIndex bool, elements ...*One) *One {
@@ -101,28 +97,10 @@ func (f *forge) CSS(css string) One {
 
 func (f *forge) UpdateIndex(frame *One) {
 	if frame != nil {
-		var existing []string
-		if len(f.frames) > 0 {
-			var buf bytes.Buffer
-			gz, _ := gzip.NewReader(bytes.NewReader(f.frames))
-			buf.ReadFrom(gz)
-			gz.Close()
-			json.Unmarshal(buf.Bytes(), &existing)
-		}
-		existing = append(existing, string(*frame))
-		raw, _ := json.Marshal(existing)
-		f.frames = f.Compress(raw)
+		f.frames = append(f.frames, frame)
 	}
 }
 
-func (f *forge) Frames() []byte {
+func (f *forge) Frames() []*One {
 	return f.frames
-}
-
-func (f *forge) Compress(data []byte) []byte {
-	var buf bytes.Buffer
-	gzipWriter := gzip.NewWriter(&buf)
-	gzipWriter.Write(data)
-	gzipWriter.Close()
-	return buf.Bytes()
 }

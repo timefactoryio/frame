@@ -24,7 +24,6 @@ type Templates interface {
 	Slides(dir string) *zero.One
 	BuildFromFile(html, class string, asFrame bool) *zero.One
 	Keyboard() *zero.One
-	KeyboardBytes() []byte
 }
 
 type templates struct {
@@ -38,13 +37,7 @@ func NewTemplates(zero zero.Zero) Templates {
 }
 
 func (t *templates) Keyboard() *zero.One {
-	final := t.Build("", false, t.HTML(keyboardHtml))
-	return final
-}
-
-func (t *templates) KeyboardBytes() []byte {
-	compressed := t.Compress(t.ToBytes(keyboardHtml))
-	return compressed
+	return t.HTML(keyboardHtml)
 }
 
 func (t *templates) BuildFromFile(html, class string, asFrame bool) *zero.One {
