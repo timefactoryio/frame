@@ -16,14 +16,13 @@ type One template.HTML
 
 func NewForge() Forge {
 	f := &forge{
-		frames: make([]*One, 0),
+		frames: []byte{},
 	}
 	return f
 }
 
 type forge struct {
-	frames []*One
-	json   []byte
+	frames []byte
 }
 
 type Forge interface {
@@ -33,6 +32,7 @@ type Forge interface {
 	UpdateIndex(*One)
 	Frames() []byte
 	HandleFrame(w http.ResponseWriter, r *http.Request)
+	Compress(data []byte) []byte
 }
 
 func (f *forge) Build(class string, updateIndex bool, elements ...*One) *One {
@@ -103,22 +103,22 @@ func (f *forge) CSS(css string) One {
 
 func (f *forge) UpdateIndex(frame *One) {
 	if frame != nil {
-		f.frames = append(f.frames, frame)
-		frames := make([]string, len(f.frames))
-		for i, fr := range f.frames {
-			frames[i] = string(*fr)
+		var existing []string
+		if len(f.frames) > 0 {
+			var buf bytes.Buffer
+			gz, _ := gzip.NewReader(bytes.NewReader(f.frames))
+			buf.ReadFrom(gz)
+			gz.Close()
+			json.Unmarshal(buf.Bytes(), &existing)
 		}
-		raw, _ := json.Marshal(frames)
-		var buf bytes.Buffer
-		gz := gzip.NewWriter(&buf)
-		_, _ = gz.Write(raw)
-		gz.Close()
-		f.json = buf.Bytes()
+		existing = append(existing, string(*frame))
+		raw, _ := json.Marshal(existing)
+		f.frames = f.Compress(raw)
 	}
 }
 
 func (f *forge) Frames() []byte {
-	return f.json
+	return f.frames
 }
 
 // return JSON array with all frames
@@ -126,4 +126,12 @@ func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.Write(f.Frames())
+}
+
+func (f *forge) Compress(data []byte) []byte {
+	var buf bytes.Buffer
+	gzipWriter := gzip.NewWriter(&buf)
+	gzipWriter.Write(data)
+	gzipWriter.Close()
+	return buf.Bytes()
 }

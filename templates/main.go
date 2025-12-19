@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"html/template"
+	"net/http"
 	"strings"
 
 	"github.com/timefactoryio/frame/zero"
@@ -20,6 +21,7 @@ type Templates interface {
 	Text(content []byte) *zero.One
 	Slides(dir string) *zero.One
 	BuildFromFile(html, class string, asFrame bool) *zero.One
+	Keyboard(file string)
 }
 
 type templates struct {
@@ -75,4 +77,12 @@ func (t *templates) Slides(dir string) *zero.One {
 
 	html := zero.One(template.HTML(buf.String()))
 	return t.Build("slides", true, &html)
+}
+
+func (t *templates) Keyboard(file string) {
+	t.Router().HandleFunc("/keyboard", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Write(t.ToBytes(file))
+	})
 }
