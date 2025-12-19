@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"compress/gzip"
 	"net/http"
-	"time"
 )
 
 type Fx interface {
 	AddFile(filePath string, prefix string) error
 	AddPath(dir string) string
+	AddRoute(path string, data []byte, contentType string)
 	// EmbedPath(efs embed.FS, root string) error
 	Pathless() string
 	Api() string
@@ -71,18 +71,19 @@ func (f *fx) cors(next http.Handler) http.Handler {
 	})
 }
 
-func (f *fx) addRoute(path string, data []byte, contentType string, compress bool) {
+func (f *fx) AddRoute(path string, data []byte, contentType string) {
+	compressed := f.Compress(data)
 	f.Router().HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", contentType)
-		if compress {
-			var buf bytes.Buffer
-			gzipWriter := gzip.NewWriter(&buf)
-			gzipWriter.Write(data)
-			gzipWriter.Close()
-			w.Header().Set("Content-Encoding", "gzip")
-			w.Write(buf.Bytes())
-		} else {
-			http.ServeContent(w, r, path, time.Time{}, bytes.NewReader(data))
-		}
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Write(compressed)
 	})
+}
+
+func (f *fx) Compress(data []byte) []byte {
+	var buf bytes.Buffer
+	gzipWriter := gzip.NewWriter(&buf)
+	gzipWriter.Write(data)
+	gzipWriter.Close()
+	return buf.Bytes()
 }

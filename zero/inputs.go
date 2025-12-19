@@ -61,8 +61,7 @@ func (f *fx) AddFile(filePath string, prefix string) error {
 	contentType := f.getType(base, fileData)
 	routePath := "/" + strings.Trim(prefix, "/") + "/" + name
 
-	compress := !strings.HasPrefix(contentType, "video/")
-	f.addRoute(routePath, fileData, contentType, compress)
+	f.AddRoute(routePath, fileData, contentType)
 	return nil
 }
 
@@ -91,16 +90,14 @@ func (f *fx) AddPath(dir string) string {
 			}
 			contentType = f.getType(base, fileData)
 			routePath := "/" + prefix + "/" + name
-			compress := !strings.HasPrefix(contentType, "video/")
-			f.addRoute(routePath, fileData, contentType, compress)
+			f.AddRoute(routePath, fileData, contentType)
 		}
 		return nil
 	})
 
 	if orderData != nil {
 		routePath := "/" + prefix
-		compress := !strings.HasPrefix(orderContentType, "video/")
-		f.addRoute(routePath, orderData, orderContentType, compress)
+		f.AddRoute(routePath, orderData, orderContentType)
 	}
 	return prefix
 }

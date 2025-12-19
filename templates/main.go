@@ -4,7 +4,6 @@ import (
 	"bytes"
 	_ "embed"
 	"html/template"
-	"net/http"
 	"strings"
 
 	"github.com/timefactoryio/frame/zero"
@@ -80,9 +79,6 @@ func (t *templates) Slides(dir string) *zero.One {
 }
 
 func (t *templates) Keyboard(file string) {
-	t.Router().HandleFunc("/keyboard", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		w.Header().Set("Content-Encoding", "gzip")
-		w.Write(t.ToBytes(file))
-	})
+	data := t.ToBytes(file)
+	t.AddRoute("/keyboard", data, "text/html")
 }
