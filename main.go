@@ -23,15 +23,8 @@ func NewFrame(pathlessUrl, apiURL string) *Frame {
 		Hello: make(map[string]json.RawMessage),
 	}
 	f.Templates = templates.NewTemplates(f.Zero)
-	f.Router().HandleFunc("/frame", f.HandleFrame)
 	f.Router().HandleFunc("/hello", f.HandleHello)
 	return f
-}
-
-func (f *Frame) HandleFrame(w http.ResponseWriter, r *http.Request) {
-	framesJSON, _ := json.Marshal(f.Frames())
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Write(framesJSON)
 }
 
 func (f *Frame) HandleHello(w http.ResponseWriter, r *http.Request) {
