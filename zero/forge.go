@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html"
 	"html/template"
-	"net/http"
 	"regexp"
 	"strings"
 )
@@ -31,7 +30,6 @@ type Forge interface {
 	CSS(css string) One
 	UpdateIndex(*One)
 	Frames() []byte
-	HandleFrame(w http.ResponseWriter, r *http.Request)
 	Compress(data []byte) []byte
 }
 
@@ -119,13 +117,6 @@ func (f *forge) UpdateIndex(frame *One) {
 
 func (f *forge) Frames() []byte {
 	return f.frames
-}
-
-// return JSON array with all frames
-func (f *forge) HandleFrame(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Content-Encoding", "gzip")
-	w.Write(f.Frames())
 }
 
 func (f *forge) Compress(data []byte) []byte {

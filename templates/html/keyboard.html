@@ -1,0 +1,193 @@
+<style>
+	#overlay {
+		position: fixed;
+		bottom: 1em;
+		right: 1em;
+		min-width: 20%;
+		height: 30%;
+		z-index: 1000;
+		pointer-events: none;
+	}
+	#overlay.hidden {
+		display: none;
+	}
+	#overlay .grid {
+		display: grid;
+		grid-template: 0.3fr 1fr 1fr 1fr / repeat(3, 1fr);
+		gap: 0.5em;
+		width: 100%;
+		height: 100%;
+		font-size: 1.3em;
+		color: white;
+		background: black;
+		transition: grid-template 50ms;
+	}
+	#overlay .grid.no-tab {
+		grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+	}
+	#overlay .key {
+		display: flex;
+		flex-direction: column;
+		border-radius: 0.375em;
+		border: medium solid #444;
+		overflow: hidden;
+	}
+	#overlay .key.tab {
+		grid-column: 1 / -1;
+		justify-content: center;
+		align-items: center;
+	}
+	#overlay .key.hidden {
+		display: none;
+	}
+	#overlay .key:empty {
+		opacity: 0;
+		pointer-events: none;
+	}
+	#overlay .top {
+		flex: 0 0 40%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	#overlay .bottom {
+		flex: 0 0 60%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+	}
+	#overlay .bottom svg {
+		padding: 0.3em;
+		display: block;
+		width: auto;
+		height: 100%;
+		max-width: 100%;
+	}
+	#overlay .key.pressed {
+		border-color: white !important;
+	}
+</style>
+
+<div class="grid"></div>
+
+<script>
+	if (!window.Keyboard) {
+		class Keyboard {
+			constructor() {
+				this.container = document.querySelector('#overlay');
+				this.grid = this.container?.querySelector('.grid');
+				this.keys = {};
+				if (this.grid) this.init();
+			}
+
+			createKey(name) {
+				const el = document.createElement('div');
+				el.classList.add('key');
+
+				if (name === 'tab') {
+					el.classList.add('tab', 'hidden');
+					el.textContent = 'Tab';
+					return { el, svgs: [], state: 0, bottom: el };
+				}
+
+				el.innerHTML =
+					'<div class="top">' +
+					name.toUpperCase() +
+					'</div><div class="bottom"></div>';
+				return {
+					el,
+					svgs: [],
+					state: 0,
+					bottom: el.lastElementChild,
+				};
+			}
+
+			createSvg(d) {
+				const svg = document.createElementNS(
+					'http://www.w3.org/2000/svg',
+					'svg'
+				);
+				svg.setAttribute('viewBox', '0 0 880 596');
+				svg.innerHTML =
+					'<rect width="860" height="576" x="10" y="10" fill="none" stroke="#00f" stroke-width="30" rx="16"/>' +
+					(d
+						? '<path stroke="#00f" stroke-width="30" d="' +
+						  d +
+						  '"/>'
+						: '');
+				return svg;
+			}
+
+			init() {
+				window.addEventListener('input', (e) =>
+					this.keys[e.detail.key]?.el.classList.toggle(
+						'pressed',
+						e.detail.pressed
+					)
+				);
+
+				['tab', '1', '2', '3', 'q', 'w', 'e', 'a', 's', 'd'].forEach(
+					(name) => {
+						const key = this.createKey(name);
+						this.keys[name] = key;
+						this.grid.appendChild(key.el);
+					}
+				);
+
+				this.keys['1'].svgs = [''];
+				this.keys['2'].svgs = ['M440 10v576', 'M10 298h860'];
+				this.keys['3'].svgs = [
+					'M440 10v576M440 298h430',
+					'M10 298h860M440 298v288',
+					'M440 10v576M10 298h430',
+					'M10 298h860M440 10v288',
+				];
+
+				['1', '2', '3'].forEach((k) =>
+					this.keys[k].bottom.appendChild(
+						this.createSvg(this.keys[k].svgs[0])
+					)
+				);
+
+				this.setColor('q', 'red');
+				this.setColor('e', 'blue');
+				this.keys['q'].bottom.textContent = 'prev';
+				this.keys['e'].bottom.textContent = 'next';
+
+				this.grid.classList.add('no-tab');
+			}
+
+			sync(layout) {
+				const visible = layout[0] > 0;
+				this.keys['tab'].el.classList.toggle('hidden', !visible);
+				this.grid.classList.toggle('no-tab', !visible);
+
+				this.keys['1'].state = 0;
+				this.keys['2'].state =
+					layout[0] === 1 ? (layout[1] + 1) % 2 : 0;
+				this.keys['3'].state =
+					layout[0] === 2 ? (layout[1] + 1) % 4 : 0;
+
+				['1', '2', '3'].forEach((k) => {
+					const key = this.keys[k];
+					key.bottom.replaceChildren(
+						this.createSvg(key.svgs[key.state])
+					);
+				});
+			}
+
+			set(name, content) {
+				this.keys[name].bottom.textContent = content;
+			}
+
+			setColor(name, color) {
+				this.keys[name].el.style.borderColor = color;
+			}
+		}
+		window.Keyboard = Keyboard;
+	}
+	if (!window.keyboard) {
+		window.keyboard = new window.Keyboard();
+	}
+</script>

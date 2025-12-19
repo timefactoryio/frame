@@ -160,17 +160,12 @@
 		}
 
 		window.addEventListener('input', (e) => {
-			if (
-				!e.detail.pressed &&
-				['w', 's', 'a', 'd'].includes(e.detail.key)
-			) {
+			if (!e.detail.pressed && ['w', 's'].includes(e.detail.key)) {
 				speed = 0;
 			}
 		});
 
-		pathless.onKey('w', () => startScroll(-20));
-		pathless.onKey('s', () => startScroll(20));
-		pathless.onKey('a', () => startScroll(-40));
-		pathless.onKey('d', () => startScroll(40));
+		pathless.onKey('w', () => startScroll(-30));
+		pathless.onKey('s', () => startScroll(30));
 	})();
 </script>

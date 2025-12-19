@@ -15,12 +15,16 @@ var slidesHtml string
 //go:embed html/text.html
 var textHtml string
 
+//go:embed html/keyboard.html
+var keyboardHtml string
+
 type Templates interface {
 	Home(heading, github, x string)
 	Text(content []byte) *zero.One
 	Slides(dir string) *zero.One
 	BuildFromFile(html, class string, asFrame bool) *zero.One
-	Keyboard(file string)
+	Keyboard() *zero.One
+	KeyboardBytes() []byte
 }
 
 type templates struct {
@@ -31,6 +35,16 @@ func NewTemplates(zero zero.Zero) Templates {
 	return &templates{
 		Zero: zero,
 	}
+}
+
+func (t *templates) Keyboard() *zero.One {
+	final := t.Build("", false, t.HTML(keyboardHtml))
+	return final
+}
+
+func (t *templates) KeyboardBytes() []byte {
+	compressed := t.Compress(t.ToBytes(keyboardHtml))
+	return compressed
 }
 
 func (t *templates) BuildFromFile(html, class string, asFrame bool) *zero.One {
@@ -76,9 +90,4 @@ func (t *templates) Slides(dir string) *zero.One {
 
 	html := zero.One(template.HTML(buf.String()))
 	return t.Build("slides", true, &html)
-}
-
-func (t *templates) Keyboard(file string) {
-	data := t.ToBytes(file)
-	t.AddRoute("/keyboard", data, "text/html")
 }

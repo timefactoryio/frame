@@ -18,6 +18,5 @@ func NewZero(pathlessUrl, apiUrl string) Zero {
 		Forge:   NewForge().(*forge),
 		Element: NewElement().(*element),
 	}
-	z.Router().HandleFunc("/frame", z.HandleFrame)
 	return z
 }
