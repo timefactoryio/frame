@@ -16,6 +16,8 @@ import (
 
 type Element interface {
 	HTML(html string) *One
+	JS(js string) One
+	CSS(css string) One
 	Markdown() *goldmark.Markdown
 	H1(s string) *One
 	H2(s string) *One
@@ -79,6 +81,22 @@ func (e *element) Markdown() *goldmark.Markdown {
 func (e *element) HTML(html string) *One {
 	o := One(template.HTML(html))
 	return &o
+}
+
+func (e *element) JS(js string) One {
+	var b strings.Builder
+	b.WriteString(`<script>`)
+	b.WriteString(js)
+	b.WriteString(`</script>`)
+	return One(template.HTML(b.String()))
+}
+
+func (e *element) CSS(css string) One {
+	var b strings.Builder
+	b.WriteString(`<style>`)
+	b.WriteString(css)
+	b.WriteString(`</style>`)
+	return One(template.HTML(b.String()))
 }
 
 func (e *element) H1(s string) *One        { return Tag("h1", s) }

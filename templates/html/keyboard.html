@@ -2,7 +2,7 @@
 	#overlay {
 		position: fixed;
 		bottom: 1em;
-		right: 1em;
+		left: 1em;
 		min-width: 20%;
 		height: 30%;
 		z-index: 1000;
@@ -20,7 +20,6 @@
 		font-size: 1.3em;
 		color: white;
 		background: black;
-		transition: grid-template 50ms;
 	}
 	#overlay .grid.no-tab {
 		grid-template: repeat(3, 1fr) / repeat(3, 1fr);
@@ -32,39 +31,39 @@
 		border: medium solid #444;
 		overflow: hidden;
 	}
-	#overlay .key.tab {
+	#overlay .tab {
 		grid-column: 1 / -1;
 		justify-content: center;
 		align-items: center;
 	}
-	#overlay .key.hidden {
-		display: none;
+	#overlay .hidden {
+		visibility: hidden;
 	}
 	#overlay .key:empty {
 		opacity: 0;
 		pointer-events: none;
 	}
-	#overlay .top {
+	#overlay .t {
 		flex: 0 0 40%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 	}
-	#overlay .bottom {
+	#overlay .b {
 		flex: 0 0 60%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		box-sizing: border-box;
 	}
-	#overlay .bottom svg {
+	#overlay .b svg {
 		padding: 0.3em;
 		display: block;
 		width: auto;
 		height: 100%;
 		max-width: 100%;
 	}
-	#overlay .key.pressed {
+	#overlay .pressed {
 		border-color: white !important;
 	}
 </style>
@@ -84,23 +83,13 @@
 			createKey(name) {
 				const el = document.createElement('div');
 				el.classList.add('key');
-
-				if (name === 'tab') {
-					el.classList.add('tab', 'hidden');
+				if (name === 'Tab') {
+					el.classList.add('tab');
 					el.textContent = 'Tab';
 					return { el, svgs: [], state: 0, bottom: el };
 				}
-
-				el.innerHTML =
-					'<div class="top">' +
-					name.toUpperCase() +
-					'</div><div class="bottom"></div>';
-				return {
-					el,
-					svgs: [],
-					state: 0,
-					bottom: el.lastElementChild,
-				};
+				el.innerHTML = `<div class="t">${name.toUpperCase()}</div><div class="b"></div>`;
+				return { el, svgs: [], state: 0, bottom: el.lastElementChild };
 			}
 
 			createSvg(d) {
@@ -112,11 +101,13 @@
 				svg.innerHTML =
 					'<rect width="860" height="576" x="10" y="10" fill="none" stroke="#00f" stroke-width="30" rx="16"/>' +
 					(d
-						? '<path stroke="#00f" stroke-width="30" d="' +
-						  d +
-						  '"/>'
+						? `<path stroke="#00f" stroke-width="30" d="${d}"/>`
 						: '');
 				return svg;
+			}
+
+			setVisible(name, visible) {
+				this.keys[name]?.el.classList.toggle('hidden', !visible);
 			}
 
 			init() {
@@ -127,11 +118,10 @@
 					)
 				);
 
-				['tab', '1', '2', '3', 'q', 'w', 'e', 'a', 's', 'd'].forEach(
+				['Tab', '1', '2', '3', 'q', 'w', 'e', 'a', 's', 'd'].forEach(
 					(name) => {
-						const key = this.createKey(name);
-						this.keys[name] = key;
-						this.grid.appendChild(key.el);
+						this.keys[name] = this.createKey(name);
+						this.grid.appendChild(this.keys[name].el);
 					}
 				);
 
@@ -152,29 +142,25 @@
 
 				this.setColor('q', 'red');
 				this.setColor('e', 'blue');
-				this.keys['q'].bottom.textContent = 'prev';
-				this.keys['e'].bottom.textContent = 'next';
-
+				this.set('q', 'prev');
+				this.set('e', 'next');
+				this.setVisible('Tab', false);
 				this.grid.classList.add('no-tab');
 			}
 
 			sync(layout) {
-				const visible = layout[0] > 0;
-				this.keys['tab'].el.classList.toggle('hidden', !visible);
-				this.grid.classList.toggle('no-tab', !visible);
-
+				this.setVisible('Tab', layout[0] > 0);
+				this.grid.classList.toggle('no-tab', !layout[0]);
 				this.keys['1'].state = 0;
 				this.keys['2'].state =
 					layout[0] === 1 ? (layout[1] + 1) % 2 : 0;
 				this.keys['3'].state =
 					layout[0] === 2 ? (layout[1] + 1) % 4 : 0;
-
-				['1', '2', '3'].forEach((k) => {
-					const key = this.keys[k];
-					key.bottom.replaceChildren(
-						this.createSvg(key.svgs[key.state])
-					);
-				});
+				['1', '2', '3'].forEach((k) =>
+					this.keys[k].bottom.replaceChildren(
+						this.createSvg(this.keys[k].svgs[this.keys[k].state])
+					)
+				);
 			}
 
 			set(name, content) {
@@ -186,8 +172,6 @@
 			}
 		}
 		window.Keyboard = Keyboard;
-	}
-	if (!window.keyboard) {
-		window.keyboard = new window.Keyboard();
+		window.keyboard = new Keyboard();
 	}
 </script>

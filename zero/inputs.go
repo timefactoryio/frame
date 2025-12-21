@@ -109,25 +109,3 @@ func (f *fx) getType(filename string, data []byte) string {
 	}
 	return contentType
 }
-
-// New method for embedded filesystem
-// func (f *fx) EmbedPath(efs embed.FS, root string) error {
-// 	return fs.WalkDir(efs, root, func(path string, d fs.DirEntry, err error) error {
-// 		if err != nil || d.IsDir() {
-// 			return err
-// 		}
-
-// 		fileData, err := efs.ReadFile(path)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		base := filepath.Base(path)
-// 		name := base[:len(base)-len(filepath.Ext(base))]
-// 		contentType := f.getType(base, fileData)
-// 		routePath := "/" + filepath.Base(root) + "/" + name
-
-// 		f.addRoute(routePath, fileData, contentType)
-// 		return nil
-// 	})
-// }

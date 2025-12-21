@@ -15,42 +15,47 @@ var slidesHtml string
 //go:embed html/text.html
 var textHtml string
 
-//go:embed html/keyboard.html
-var keyboardHtml string
+// //go:embed html/keyboard.html
+// var keyboardHtml string
 
 type Templates interface {
 	Home(heading, github, x string)
-	Text(content []byte) *zero.One
-	Slides(dir string) *zero.One
-	BuildFromFile(html, class string, asFrame bool) *zero.One
-	Keyboard() *zero.One
+	Text(path string)
+	Slides(dir string)
+	BuildFromFile(html, class string) *zero.One
+	Keyboard(html string) *zero.One
 }
 
 type templates struct {
-	zero.Zero
+	*zero.Zero
 }
 
-func NewTemplates(zero zero.Zero) Templates {
+func NewTemplates(zero *zero.Zero) Templates {
 	return &templates{
 		Zero: zero,
 	}
 }
 
-func (t *templates) Keyboard() *zero.One {
-	return t.HTML(keyboardHtml)
+func (t *templates) Keyboard(html string) *zero.One {
+	keyboard := t.BuildFromFile(html, "")
+	return keyboard
 }
 
-func (t *templates) BuildFromFile(html, class string, asFrame bool) *zero.One {
+func (t *templates) BuildFromFile(html, class string) *zero.One {
 	file := t.HTML(t.ToString(html))
-	final := t.Build(class, asFrame, file)
+	final := t.Builder(class, file)
 	return final
 }
 
-func (t *templates) Text(content []byte) *zero.One {
+func (t *templates) Text(path string) {
+	content := t.ToBytes(path)
+	if content == nil {
+		return
+	}
+
 	var buf bytes.Buffer
 	if err := (*t.Markdown()).Convert(content, &buf); err != nil {
-		empty := zero.One("")
-		return &empty
+		return
 	}
 
 	html := buf.String()
@@ -61,26 +66,23 @@ func (t *templates) Text(content []byte) *zero.One {
 
 	markdown := zero.One(template.HTML(html))
 	template := zero.One(template.HTML(textHtml))
-	result := t.Build("text", true, &markdown, &template)
-	return result
+	t.Build("text", &markdown, &template)
 }
 
-func (t *templates) Slides(dir string) *zero.One {
+func (t *templates) Slides(dir string) {
 	prefix := t.AddPath(dir)
 
 	tmpl, err := template.New("slides").Parse(slidesHtml)
 	if err != nil {
-		empty := zero.One("")
-		return &empty
+		return
 	}
 
 	var buf bytes.Buffer
 	data := map[string]string{"PREFIX": prefix}
 	if err := tmpl.Execute(&buf, data); err != nil {
-		empty := zero.One("")
-		return &empty
+		return
 	}
 
 	html := zero.One(template.HTML(buf.String()))
-	return t.Build("slides", true, &html)
+	t.Build("slides", &html)
 }

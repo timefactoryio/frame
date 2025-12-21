@@ -22,14 +22,12 @@ type forge struct {
 }
 
 type Forge interface {
-	Build(class string, updateIndex bool, elements ...*One) *One
-	JS(js string) One
-	CSS(css string) One
-	UpdateIndex(*One)
-	Frames() []*One
+	Build(class string, elements ...*One)
+	Builder(class string, elements ...*One) *One
+	Frames(frame ...*One) []*One
 }
 
-func (f *forge) Build(class string, updateIndex bool, elements ...*One) *One {
+func (f *forge) Build(class string, elements ...*One) {
 	var b strings.Builder
 	for _, el := range elements {
 		b.WriteString(string(*el))
@@ -45,9 +43,24 @@ func (f *forge) Build(class string, updateIndex bool, elements ...*One) *One {
 	cleaned := f.consolidateAssets(htmlOut)
 	result := One(template.HTML(cleaned))
 
-	if updateIndex {
-		f.UpdateIndex(&result)
+	f.Frames(&result)
+}
+
+func (f *forge) Builder(class string, elements ...*One) *One {
+	var b strings.Builder
+	for _, el := range elements {
+		b.WriteString(string(*el))
 	}
+
+	var htmlOut string
+	if class == "" {
+		htmlOut = b.String()
+	} else {
+		consolidatedContent := b.String()
+		htmlOut = fmt.Sprintf(`<div class="%s">%s</div>`, html.EscapeString(class), consolidatedContent)
+	}
+	cleaned := f.consolidateAssets(htmlOut)
+	result := One(template.HTML(cleaned))
 	return &result
 }
 
@@ -79,28 +92,9 @@ func (f *forge) consolidateAssets(html string) string {
 	return html
 }
 
-func (f *forge) JS(js string) One {
-	var b strings.Builder
-	b.WriteString(`<script>`)
-	b.WriteString(js)
-	b.WriteString(`</script>`)
-	return One(template.HTML(b.String()))
-}
-
-func (f *forge) CSS(css string) One {
-	var b strings.Builder
-	b.WriteString(`<style>`)
-	b.WriteString(css)
-	b.WriteString(`</style>`)
-	return One(template.HTML(b.String()))
-}
-
-func (f *forge) UpdateIndex(frame *One) {
-	if frame != nil {
-		f.frames = append(f.frames, frame)
+func (f *forge) Frames(frame ...*One) []*One {
+	if len(frame) > 0 && frame[0] != nil {
+		f.frames = append(f.frames, frame[0])
 	}
-}
-
-func (f *forge) Frames() []*One {
 	return f.frames
 }

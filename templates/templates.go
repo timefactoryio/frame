@@ -40,7 +40,7 @@ func (t *templates) Home(heading, github, x string) {
 }
 `)
 	footer := t.buildFooter(github, x)
-	t.Build("home", true, img, h1, footer, &css)
+	t.Build("home", img, h1, footer, &css)
 }
 
 func (t *templates) buildFooter(github, x string) *zero.One {
@@ -68,7 +68,7 @@ func (t *templates) buildFooter(github, x string) *zero.One {
 	if x != "" {
 		elements = append(elements, t.XLink(x))
 	}
-	return t.Build("footer", false, elements...)
+	return t.Builder("footer", elements...)
 }
 
 func (t *templates) GithubLink(username string) *zero.One {
