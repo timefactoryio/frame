@@ -1,42 +1,67 @@
 package zero
 
 import (
-	"encoding/json"
+	"io"
 	"net/http"
+	"os"
+	"strings"
 )
 
 type Zero struct {
-	Fx
 	Forge
 	Element
-	cachedJSON []byte
 }
 
-func NewZero(pathlessUrl, apiUrl string) *Zero {
+func NewZero() *Zero {
 	z := &Zero{
-		Fx:      NewFx(pathlessUrl, apiUrl).(*fx),
 		Forge:   NewForge().(*forge),
 		Element: NewElement().(*element),
 	}
 	return z
 }
 
-// Encode marshals the input data to JSON and caches it for subsequent Out calls
-func (z *Zero) Encode(input any) error {
-	data, err := json.Marshal(input)
-	if err != nil {
-		return err
-	}
-	z.cachedJSON = data
-	return nil
+func (z *Zero) BuildFromFile(html, class string) *One {
+	file := z.HTML(z.ToString(html))
+	final := z.Builder(class, file)
+	return final
 }
 
-// Out writes the cached JSON response for http requests or returns an HTTP 500 error if no data is cached
-func (z *Zero) Out(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-	if z.cachedJSON == nil {
-		http.Error(w, "No data encoded", http.StatusInternalServerError)
-		return
+func (z *Zero) ToBytes(input string) []byte {
+	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
+		resp, err := http.Get(input)
+		if err != nil {
+			return nil
+		}
+		defer resp.Body.Close()
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil
+		}
+		return b
 	}
-	w.Write(z.cachedJSON)
+	b, err := os.ReadFile(input)
+	if err != nil {
+		return nil
+	}
+	return b
+}
+
+func (z *Zero) ToString(input string) string {
+	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
+		resp, err := http.Get(input)
+		if err != nil {
+			return ""
+		}
+		defer resp.Body.Close()
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return ""
+		}
+		return string(b)
+	}
+	b, err := os.ReadFile(input)
+	if err != nil {
+		return ""
+	}
+	return string(b)
 }

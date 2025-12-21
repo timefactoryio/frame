@@ -1,25 +1,16 @@
 package frame
 
 import (
-	"html/template"
-
-	"github.com/timefactoryio/frame/templates"
-	"github.com/timefactoryio/frame/zero"
+	"github.com/timefactoryio/frame/one"
 )
 
-type One template.HTML
-
 type Frame struct {
-	templates.Templates
-	*zero.Zero
-	Hello map[string]any `json:"hello"`
+	*one.One
 }
 
 func NewFrame(pathlessUrl, apiURL string) *Frame {
 	f := &Frame{
-		Zero:  zero.NewZero(pathlessUrl, apiURL),
-		Hello: make(map[string]any),
+		One: one.NewOne(pathlessUrl, apiURL),
 	}
-	f.Templates = templates.NewTemplates(f.Zero)
 	return f
 }
