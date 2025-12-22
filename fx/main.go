@@ -2,185 +2,133 @@ package fx
 
 import (
 	"bytes"
-	_ "embed"
-	"fmt"
-	"html/template"
+	"compress/gzip"
+	"mime"
+	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
-
-	"github.com/timefactoryio/frame/zero"
 )
 
-//go:embed html/slides.html
-var slidesHtml string
-
-//go:embed html/text.html
-var textHtml string
-
 type Fx interface {
-	Text(path string)
-	Slides(dir string)
-	Keyboard() *zero.One
-	ToBytes(input string) []byte
-	ToString(input string) string
-	Pathless() string
-	Api() string
+	AddFile(filePath string, prefix string) error
+	AddPath(dir string) string
+	AddRoute(path string, data []byte, contentType string)
+	Router() *http.ServeMux
 }
 
 type fx struct {
-	*zero.Zero
-	keyboard *zero.One
+	mux      *http.ServeMux
 	pathless string
 	api      string
 }
 
-func (f *fx) Pathless() string {
-	return f.pathless
-}
-
-func (f *fx) Api() string {
-	return f.api
-}
-
 func NewFx(pathless, apiUrl string) Fx {
-	if pathless == "" {
-		pathless = "http://localhost:1000"
-	}
-	if apiUrl == "" {
-		apiUrl = "http://localhost:1001"
-	}
-
 	f := &fx{
-		Zero:     zero.NewZero(),
+		mux:      http.NewServeMux(),
 		pathless: pathless,
 		api:      apiUrl,
 	}
-	f.keyboard = f.BuildFromFile("html/keyboard.html", "")
 	return f
 }
 
-func (f *fx) Keyboard() *zero.One {
-	return f.keyboard
+func (f *fx) Router() *http.ServeMux {
+	return f.mux
 }
 
-func (f *fx) Text(path string) {
-	content := f.ToBytes(path)
-	if content == nil {
-		return
-	}
+func (f *fx) AddRoute(path string, data []byte, contentType string) {
+	compressed := f.Compress(data)
+	f.Router().HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Write(compressed)
+	})
+}
 
+func (f *fx) Compress(data []byte) []byte {
 	var buf bytes.Buffer
-	if err := (*f.Markdown()).Convert(content, &buf); err != nil {
-		return
-	}
-
-	html := buf.String()
-	html = strings.ReplaceAll(html, "<p><img", "<img")
-	html = strings.ReplaceAll(html, "\"></p>", "\">")
-	html = strings.ReplaceAll(html, "\" /></p>", "\" />")
-	html = strings.ReplaceAll(html, "\"/></p>", "\"/>")
-
-	markdown := zero.One(template.HTML(html))
-	template := zero.One(template.HTML(textHtml))
-	f.Build("text", &markdown, &template)
+	gzipWriter := gzip.NewWriter(&buf)
+	gzipWriter.Write(data)
+	gzipWriter.Close()
+	return buf.Bytes()
 }
 
-func (f *fx) Slides(dir string) {
-	prefix := f.AddPath(dir)
+func (f *fx) Serve() {
+	go func() {
+		http.ListenAndServe(":1001", f.cors(f.Router()))
+	}()
+}
 
-	tmpl, err := template.New("slides").Parse(slidesHtml)
+func (f *fx) cors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", f.pathless)
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Add a single file to the frame with a prefix path
+func (f *fx) AddFile(filePath string, prefix string) error {
+	fileData, err := os.ReadFile(filePath)
 	if err != nil {
-		return
+		return err
 	}
 
-	var buf bytes.Buffer
-	data := map[string]string{"PREFIX": prefix}
-	if err := tmpl.Execute(&buf, data); err != nil {
-		return
-	}
+	base := filepath.Base(filePath)
+	name := base[:len(base)-len(filepath.Ext(base))]
+	contentType := f.getType(base, fileData)
+	routePath := "/" + strings.Trim(prefix, "/") + "/" + name
 
-	html := zero.One(template.HTML(buf.String()))
-	f.Build("slides", &html)
-}
-
-func (f *fx) Home(heading, github, x string) {
-	logo := f.Api() + "/img/logo"
-	img := f.Img(logo, "logo")
-	h1 := f.H1(heading)
-	css := f.CSS(`
-  .home {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	height: 100%;
-	width: 100%;
-	text-align: center;
-	box-sizing: border-box;
-	overflow: hidden;
-}
-.home img {
-	max-width: 95%;
-	max-height: 30vh;
-	width: auto;
-	height: auto;
-	display: block;
-	object-fit: contain;
-}
-.home h1 {
-	color: inherit;
-	width: 100%;
-	white-space: nowrap;
-	overflow: hidden;
-	font-size: clamp(2rem, 3vw, 3rem);
-	margin: 0;
-}
-`)
-	footer := f.buildFooter(github, x)
-	f.Build("home", img, h1, footer, &css)
+	f.AddRoute(routePath, fileData, contentType)
+	return nil
 }
 
-func (f *fx) buildFooter(github, x string) *zero.One {
-	if github == "" && x == "" {
+// Walk directory and load files into memory, determine Content-Type based on file extension, register routes as /<dirname>/<file without extension>
+func (f *fx) AddPath(dir string) string {
+	prefix := filepath.Base(dir)
+	var orderData []byte
+	var orderContentType string
+
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() {
+			return err
+		}
+
+		base := filepath.Base(path)
+		name := base[:len(base)-len(filepath.Ext(base))]
+		contentType := f.getType(base, nil)
+
+		if base == "sort.json" {
+			orderData, _ = os.ReadFile(path)
+			orderContentType = contentType
+		} else {
+			fileData, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			contentType = f.getType(base, fileData)
+			routePath := "/" + prefix + "/" + name
+			f.AddRoute(routePath, fileData, contentType)
+		}
 		return nil
-	}
-	footerCSS := f.CSS(`
-.footer {
-    display: flex;
-    justify-content: center;
-    gap: 1.5em;
-    margin-top: 1.5em;
-}
-.footer img.icon {
-    width: 2em;
-    height: 2em;
-    object-fit: contain;
-}
-`)
-	elements := []*zero.One{&footerCSS}
+	})
 
-	if github != "" {
-		elements = append(elements, f.GithubLink(github))
+	if orderData != nil {
+		routePath := "/" + prefix
+		f.AddRoute(routePath, orderData, orderContentType)
 	}
-	if x != "" {
-		elements = append(elements, f.XLink(x))
-	}
-	return f.Builder("footer", elements...)
+	return prefix
 }
 
-func (f *fx) GithubLink(username string) *zero.One {
-	if username == "" {
-		return nil
+func (f *fx) getType(filename string, data []byte) string {
+	contentType := mime.TypeByExtension(filepath.Ext(filename))
+	if contentType == "" {
+		contentType = http.DetectContentType(data)
 	}
-	logo := fmt.Sprintf("%s/img/gh", f.Api())
-	href := fmt.Sprintf("https://github.com/%s", username)
-	return f.LinkedIcon(href, logo, "GitHub")
-}
-
-func (f *fx) XLink(username string) *zero.One {
-	if username == "" {
-		return nil
-	}
-	logo := fmt.Sprintf("%s/img/x", f.Api())
-	href := fmt.Sprintf("https://x.com/%s", username)
-	return f.LinkedIcon(href, logo, "X")
+	return contentType
 }

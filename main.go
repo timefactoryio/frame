@@ -5,7 +5,7 @@ import (
 )
 
 type Frame struct {
-	*one.One
+	one.One
 }
 
 func NewFrame(pathlessUrl, apiURL string) *Frame {
