@@ -1,16 +1,25 @@
 package frame
 
 import (
-	"github.com/timefactoryio/frame/one"
+	"github.com/timefactoryio/frame/fx"
+	"github.com/timefactoryio/frame/zero"
 )
 
 type Frame struct {
-	one.One
+	zero.Zero
+	fx.Fx
 }
 
-func NewFrame(pathlessUrl, apiURL string) *Frame {
+func NewFrame(pathlessUrl, apiUrl string) *Frame {
+	if pathlessUrl == "" {
+		pathlessUrl = "http://localhost:1000"
+	}
+	if apiUrl == "" {
+		apiUrl = "http://localhost:1001"
+	}
+
 	f := &Frame{
-		One: one.NewOne(pathlessUrl, apiURL),
+		Fx: fx.NewFx(),
 	}
 	return f
 }

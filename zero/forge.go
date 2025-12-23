@@ -12,19 +12,22 @@ type One template.HTML
 
 func NewForge() Forge {
 	f := &forge{
-		frames: []*One{},
+		frames:  []*One{},
+		Element: NewElement().(*element),
 	}
 	return f
 }
 
 type forge struct {
 	frames []*One
+	Element
 }
 
 type Forge interface {
 	Build(class string, elements ...*One)
 	Builder(class string, elements ...*One) *One
 	Frames(frame ...*One) []*One
+	Element
 }
 
 func (f *forge) Build(class string, elements ...*One) {
