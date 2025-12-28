@@ -7,6 +7,7 @@ import (
 type Zero interface {
 	Forge
 	Circuit
+	Start()
 }
 
 type zero struct {
