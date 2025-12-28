@@ -1,4 +1,4 @@
-package fx
+package frame
 
 import (
 	"bytes"
@@ -10,27 +10,7 @@ import (
 	"github.com/timefactoryio/frame/zero"
 )
 
-//go:embed html/slides.html
-var slidesHtml string
-
-//go:embed html/text.html
-var textHtml string
-
-type Fx interface {
-	Text(path string)
-	Slides(dir string)
-	Home(heading, github, x string)
-}
-
-type fx struct {
-	zero.Zero
-}
-
-func NewFx() Fx {
-	return &fx{}
-}
-
-func (f *fx) Text(path string) {
+func (f *frame) Text(path string) {
 	content := f.ToBytes(path)
 	if content == nil {
 		return
@@ -48,14 +28,14 @@ func (f *fx) Text(path string) {
 	html = strings.ReplaceAll(html, "\"/></p>", "\"/>")
 
 	markdown := zero.One(template.HTML(html))
-	template := zero.One(template.HTML(textHtml))
+	template := zero.One(template.HTML(f.TextTemplate()))
 	f.Build("text", &markdown, &template)
 }
 
-func (f *fx) Slides(dir string) {
-	prefix := f.Input(dir)
+func (f *frame) Slides(dir string) {
+	prefix := f.Reader(dir)
 
-	tmpl, err := template.New("slides").Parse(slidesHtml)
+	tmpl, err := template.New("slides").Parse(f.SlidesTemplate())
 	if err != nil {
 		return
 	}
@@ -70,7 +50,7 @@ func (f *fx) Slides(dir string) {
 	f.Build("slides", &html)
 }
 
-func (f *fx) Home(heading, github, x string) {
+func (f *frame) Home(heading, github, x string) {
 	logo := f.Api() + "/img/logo"
 	img := f.Img(logo, "logo")
 	h1 := f.H1(heading)
@@ -107,7 +87,7 @@ func (f *fx) Home(heading, github, x string) {
 	f.Build("home", img, h1, footer, &css)
 }
 
-func (f *fx) buildFooter(github, x string) *zero.One {
+func (f *frame) buildFooter(github, x string) *zero.One {
 	if github == "" && x == "" {
 		return nil
 	}
@@ -135,7 +115,7 @@ func (f *fx) buildFooter(github, x string) *zero.One {
 	return f.Builder("footer", elements...)
 }
 
-func (f *fx) GithubLink(username string) *zero.One {
+func (f *frame) GithubLink(username string) *zero.One {
 	if username == "" {
 		return nil
 	}
@@ -144,7 +124,7 @@ func (f *fx) GithubLink(username string) *zero.One {
 	return f.LinkedIcon(href, logo, "GitHub")
 }
 
-func (f *fx) XLink(username string) *zero.One {
+func (f *frame) XLink(username string) *zero.One {
 	if username == "" {
 		return nil
 	}
