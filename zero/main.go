@@ -34,9 +34,14 @@ func (z *zero) Start() {
 		http.ListenAndServe(":1001", handler)
 	}()
 	z.Router().HandleFunc("/", z.HandleFrame)
+
 }
 
 func (z *zero) HandleFrame(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.Write(z.FrameJson())

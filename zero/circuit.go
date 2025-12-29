@@ -11,6 +11,7 @@ import (
 
 type Circuit interface {
 	Router() *http.ServeMux
+	Handle(data []byte) http.HandlerFunc
 	Reader(path string) string
 	Pathless() string
 	Api() string
@@ -47,6 +48,13 @@ func (c *circuit) Pathless() string {
 
 func (c *circuit) Api() string {
 	return c.api
+}
+func (c *circuit) Handle(data []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Write(data)
+	}
 }
 
 // Reader reads files from a path (file or directory) and returns the directory name if a directory is provided
