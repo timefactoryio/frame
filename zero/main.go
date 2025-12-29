@@ -15,10 +15,10 @@ type zero struct {
 	Circuit
 }
 
-func NewZero(pathless, apiUrl, keyboardHtml string) Zero {
+func NewZero(pathless, apiUrl string) Zero {
 	return &zero{
 		Circuit: NewCircuit(pathless, apiUrl).(*circuit),
-		Forge:   NewForge(keyboardHtml).(*forge),
+		Forge:   NewForge().(*forge),
 	}
 }
 

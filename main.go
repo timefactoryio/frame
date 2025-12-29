@@ -15,7 +15,7 @@ type frame struct {
 	zero.Zero
 }
 
-func NewFrame(pathlessUrl, apiUrl, keyboardHtml string) Frame {
+func NewFrame(pathlessUrl, apiUrl string) Frame {
 	if pathlessUrl == "" {
 		pathlessUrl = "http://localhost:1000"
 	}
@@ -24,7 +24,7 @@ func NewFrame(pathlessUrl, apiUrl, keyboardHtml string) Frame {
 	}
 
 	f := &frame{
-		Zero: zero.NewZero(pathlessUrl, apiUrl, keyboardHtml),
+		Zero: zero.NewZero(pathlessUrl, apiUrl),
 	}
 	return f
 }

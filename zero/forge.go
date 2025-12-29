@@ -16,12 +16,12 @@ import (
 
 type One template.HTML
 
-func NewForge(keyboardHtml string) Forge {
+func NewForge() Forge {
 	f := &forge{
 		frames:  []*One{},
 		Element: NewElement().(*element),
 	}
-	f.Keyboard(keyboardHtml)
+	// f.Keyboard(keyboardHtml)
 	return f
 }
 
@@ -42,10 +42,10 @@ type Forge interface {
 	Element
 }
 
-func (f *forge) Keyboard(html string) {
-	keyboard := f.HTML(f.ToString(html))
-	f.Build("", keyboard)
-}
+// func (f *forge) Keyboard(html string) {
+// 	keyboard := f.HTML(f.ToString(html))
+// 	f.Build("", keyboard)
+// }
 
 func (f *forge) Build(class string, elements ...*One) {
 	var b strings.Builder
