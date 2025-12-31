@@ -157,8 +157,7 @@ func (f *forge) ToJSON() {
 	}
 
 	framesData, _ := json.Marshal(frameStrings)
-	layoutsData := f.ToBytes(f.Layouts())
-
+	layoutsData := []byte(f.Layouts())
 	helloData := map[string]json.RawMessage{
 		"frames":  framesData,
 		"layouts": layoutsData,
