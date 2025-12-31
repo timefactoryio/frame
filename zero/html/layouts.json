@@ -1,0 +1,24 @@
+[
+	{
+		"count": 1,
+		"svgs": [
+			"<svg viewBox=\"0 0 880 596\" style=\"width:100%;height:100%\"><rect width=\"860\" height=\"576\" x=\"10\" y=\"10\" fill=\"none\" stroke=\"#00f\" stroke-width=\"30\" rx=\"16\"/></svg>"
+		]
+	},
+	{
+		"count": 2,
+		"svgs": [
+			"<svg viewBox=\"0 0 880 596\" style=\"width:100%;height:100%\"><rect width=\"860\" height=\"576\" x=\"10\" y=\"10\" fill=\"none\" stroke=\"#00f\" stroke-width=\"30\" rx=\"16\"/><path stroke=\"#00f\" stroke-width=\"30\" d=\"M440 10v576\"/></svg>",
+			"<svg viewBox=\"0 0 880 596\" style=\"width:100%;height:100%\"><rect width=\"860\" height=\"576\" x=\"10\" y=\"10\" fill=\"none\" stroke=\"#00f\" stroke-width=\"30\" rx=\"16\"/><path stroke=\"#00f\" stroke-width=\"30\" d=\"M10 298h860\"/></svg>"
+		]
+	},
+	{
+		"count": 4,
+		"svgs": [
+			"<svg viewBox=\"0 0 880 596\" style=\"width:100%;height:100%\"><rect width=\"860\" height=\"576\" x=\"10\" y=\"10\" fill=\"none\" stroke=\"#00f\" stroke-width=\"30\" rx=\"16\"/><path stroke=\"#00f\" stroke-width=\"30\" d=\"M440 10v576M440 298h430\"/></svg>",
+			"<svg viewBox=\"0 0 880 596\" style=\"width:100%;height:100%\"><rect width=\"860\" height=\"576\" x=\"10\" y=\"10\" fill=\"none\" stroke=\"#00f\" stroke-width=\"30\" rx=\"16\"/><path stroke=\"#00f\" stroke-width=\"30\" d=\"M10 298h860M440 298v288\"/></svg>",
+			"<svg viewBox=\"0 0 880 596\" style=\"width:100%;height:100%\"><rect width=\"860\" height=\"576\" x=\"10\" y=\"10\" fill=\"none\" stroke=\"#00f\" stroke-width=\"30\" rx=\"16\"/><path stroke=\"#00f\" stroke-width=\"30\" d=\"M440 10v576M10 298h430\"/></svg>",
+			"<svg viewBox=\"0 0 880 596\" style=\"width:100%;height:100%\"><rect width=\"860\" height=\"576\" x=\"10\" y=\"10\" fill=\"none\" stroke=\"#00f\" stroke-width=\"30\" rx=\"16\"/><path stroke=\"#00f\" stroke-width=\"30\" d=\"M10 298h860M440 10v288\"/></svg>"
+		]
+	}
+]

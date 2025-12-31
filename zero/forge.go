@@ -28,6 +28,7 @@ func NewForge() Forge {
 type forge struct {
 	frames     []*One
 	framesJson []byte
+	forgeMap   []byte
 	Element
 }
 
@@ -155,10 +156,19 @@ func (f *forge) ToJSON() {
 		}
 	}
 
-	data, _ := json.Marshal(frameStrings)
+	framesData, _ := json.Marshal(frameStrings)
+	layoutsData := f.ToBytes(f.Layouts())
+
+	helloData := map[string]json.RawMessage{
+		"frames":  framesData,
+		"layouts": layoutsData,
+	}
+
+	combinedData, _ := json.Marshal(helloData)
+
 	var buf bytes.Buffer
 	w := gzip.NewWriter(&buf)
-	w.Write(data)
+	w.Write(combinedData)
 	w.Close()
 	f.framesJson = buf.Bytes()
 }

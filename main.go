@@ -9,7 +9,6 @@ type Frame interface {
 	Home(heading, github, x string)
 	Text(path string)
 	Slides(dir string)
-	Keyboard(html string)
 }
 
 type frame struct {
@@ -28,9 +27,4 @@ func NewFrame(pathlessUrl, apiUrl string) Frame {
 		Zero: zero.NewZero(pathlessUrl, apiUrl),
 	}
 	return f
-}
-
-func (f *frame) Keyboard(html string) {
-	keyboard := f.HTML(f.ToString(html))
-	f.Build("", keyboard)
 }

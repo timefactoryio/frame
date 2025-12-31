@@ -21,6 +21,9 @@ var slidesHtml string
 //go:embed html/text.html
 var textHtml string
 
+//go:embed html/layouts.json
+var layoutsJson string
+
 type Element interface {
 	HTML(html string) *One
 	JS(js string) One
@@ -28,6 +31,7 @@ type Element interface {
 	Markdown() *goldmark.Markdown
 	TextTemplate() string
 	SlidesTemplate() string
+	Layouts() string
 	H1(s string) *One
 	H2(s string) *One
 	H3(s string) *One
@@ -77,6 +81,10 @@ func NewElement() Element {
 	return &element{
 		Md: initGoldmark(),
 	}
+}
+
+func (e *element) Layouts() string {
+	return layoutsJson
 }
 
 func (e *element) TextTemplate() string {
