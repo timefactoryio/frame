@@ -5,6 +5,8 @@ import (
 	_ "embed"
 	"fmt"
 	"html/template"
+	"io"
+	"net/http"
 	"strings"
 
 	"github.com/timefactoryio/frame/zero"
@@ -13,6 +15,38 @@ import (
 func (f *frame) Text(path string) {
 	content := f.ToBytes(path)
 	if content == nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	if err := (*f.Markdown()).Convert(content, &buf); err != nil {
+		return
+	}
+
+	html := buf.String()
+	html = strings.ReplaceAll(html, "<p><img", "<img")
+	html = strings.ReplaceAll(html, "\"></p>", "\">")
+	html = strings.ReplaceAll(html, "\" /></p>", "\" />")
+	html = strings.ReplaceAll(html, "\"/></p>", "\"/>")
+
+	markdown := zero.One(template.HTML(html))
+	template := zero.One(template.HTML(f.TextTemplate()))
+	f.Build("text", &markdown, &template)
+}
+
+func (f *frame) README(path string) {
+	resp, err := http.Get(path)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return
+	}
+
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
 		return
 	}
 
