@@ -9,7 +9,6 @@ type Frame interface {
 	Home(heading, github, x string)
 	Text(path string)
 	Slides(dir string)
-	README(path string)
 }
 
 type frame struct {
