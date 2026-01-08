@@ -20,13 +20,6 @@ func NewZero(pathless string) *Zero {
 	}
 }
 
-func (z *Zero) SVGToEmbed(svg []byte) string {
-	if svg == nil {
-		return ""
-	}
-	return string(svg)
-}
-
 func (z *Zero) Home(logo, heading string) {
 	logoEmbed := z.ToString(logo)
 	if logoEmbed == "" {
@@ -36,9 +29,9 @@ func (z *Zero) Home(logo, heading string) {
 	tmpl := template.Must(template.New("home").Parse(homeHtml))
 
 	var buf strings.Builder
-	if err := tmpl.Execute(&buf, map[string]string{
-		"LOGO":    logoEmbed,
-		"HEADING": heading,
+	if err := tmpl.Execute(&buf, map[string]template.HTML{
+		"LOGO":    template.HTML(logoEmbed),
+		"HEADING": template.HTML(heading),
 	}); err != nil {
 		return
 	}
