@@ -20,18 +20,24 @@ func NewZero(pathless string) *Zero {
 	}
 }
 
+func (z *Zero) SVGToEmbed(svg []byte) string {
+	if svg == nil {
+		return ""
+	}
+	return string(svg)
+}
+
 func (z *Zero) Home(logo, heading string) {
-	logoBytes := z.ToBytes(logo)
-	if logoBytes == nil {
+	logoEmbed := z.ToString(logo)
+	if logoEmbed == "" {
 		return
 	}
 
-	logoData := "data:image/svg+xml," + string(logoBytes)
 	tmpl := template.Must(template.New("home").Parse(homeHtml))
 
 	var buf strings.Builder
 	if err := tmpl.Execute(&buf, map[string]string{
-		"LOGO":    logoData,
+		"LOGO":    logoEmbed,
 		"HEADING": heading,
 	}); err != nil {
 		return
@@ -42,27 +48,16 @@ func (z *Zero) Home(logo, heading string) {
 }
 
 func (z *Zero) HomeWithFooter(logo, heading, link, icon, alt string) {
-	logoBytes := z.ToBytes(logo)
-	if logoBytes == nil {
-		return
-	}
-
-	iconBytes := z.ToBytes(icon)
-	if iconBytes == nil {
-		return
-	}
-
-	logoData := "data:image/svg+xml," + string(logoBytes)
-	iconData := "data:image/svg+xml," + string(iconBytes)
-
+	logoBytes := z.ToString(logo)
+	iconBytes := z.ToString(icon)
 	tmpl := template.Must(template.New("home").Parse(homeWithFooterHtml))
 
 	var buf strings.Builder
 	if err := tmpl.Execute(&buf, map[string]string{
-		"LOGO":    logoData,
+		"LOGO":    logoBytes,
 		"HEADING": heading,
 		"LINK":    link,
-		"ICON":    iconData,
+		"ICON":    iconBytes,
 		"ALT":     alt,
 	}); err != nil {
 		return

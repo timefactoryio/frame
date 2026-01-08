@@ -17,6 +17,7 @@ type Circuit interface {
 	Reader(path string) string
 	Pathless() string
 	ToBytes(input string) []byte
+	ToString(input string) string
 	Compress(data []byte) []byte
 }
 
@@ -144,6 +145,14 @@ func (c *circuit) ToBytes(input string) []byte {
 		return nil
 	}
 	return b
+}
+
+func (c *circuit) ToString(input string) string {
+	b := c.ToBytes(input)
+	if b == nil {
+		return ""
+	}
+	return string(b)
 }
 
 func (c *circuit) Compress(data []byte) []byte {

@@ -10,13 +10,12 @@
 		box-sizing: border-box;
 		overflow: hidden;
 	}
-	.home img {
+	.home svg {
 		max-width: 95%;
 		max-height: 30vh;
 		width: auto;
 		height: auto;
 		object-fit: contain;
-		display: block;
 	}
 	.home h1 {
 		color: inherit;
@@ -28,7 +27,7 @@
 	}
 </style>
 <div class="home">
-	<img src="{{.LOGO}}" alt="logo" />
+	{{.LOGO}}
 	<h1>{{.HEADING}}</h1>
 	<h2>Press 'Z' to begin</h2>
 </div>
