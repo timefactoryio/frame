@@ -27,9 +27,6 @@ var layoutsJson []byte
 //go:embed embed/home.html
 var homeHtml string
 
-//go:embed embed/homewithfooter.html
-var homeWithFooterHtml string
-
 type Element interface {
 	HTML(html string) *One
 	JS(js string) One
@@ -96,10 +93,6 @@ func (e *element) Layouts() []byte {
 
 func (e *element) HomeTemplate() string {
 	return homeHtml
-}
-
-func (e *element) HomeWithFooterTemplate() string {
-	return homeWithFooterHtml
 }
 
 func (e *element) TextTemplate() string {

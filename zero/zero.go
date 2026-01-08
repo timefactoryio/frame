@@ -40,26 +40,6 @@ func (z *Zero) Home(logo, heading string) {
 	z.Build("", &o)
 }
 
-func (z *Zero) HomeWithFooter(logo, heading, link, icon, alt string) {
-	logoBytes := z.ToString(logo)
-	iconBytes := z.ToString(icon)
-	tmpl := template.Must(template.New("home").Parse(homeWithFooterHtml))
-
-	var buf strings.Builder
-	if err := tmpl.Execute(&buf, map[string]string{
-		"LOGO":    logoBytes,
-		"HEADING": heading,
-		"LINK":    link,
-		"ICON":    iconBytes,
-		"ALT":     alt,
-	}); err != nil {
-		return
-	}
-
-	o := One(template.HTML(buf.String()))
-	z.Build("", &o)
-}
-
 func (z *Zero) Text(path string) {
 	content := z.ToBytes(path)
 	if content == nil {
