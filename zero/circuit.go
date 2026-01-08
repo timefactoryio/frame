@@ -3,10 +3,12 @@ package zero
 import (
 	"bytes"
 	"compress/gzip"
+	"io"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Circuit interface {
@@ -14,14 +16,13 @@ type Circuit interface {
 	Handle(data []byte) http.HandlerFunc
 	Reader(path string) string
 	Pathless() string
-	Api() string
+	ToBytes(input string) []byte
 	Compress(data []byte) []byte
 }
 
 type circuit struct {
 	router   *http.ServeMux
 	pathless string
-	api      string
 }
 
 type Value struct {
@@ -30,11 +31,14 @@ type Value struct {
 	Data []byte
 }
 
-func NewCircuit(pathless, apiUrl string) Circuit {
+func NewCircuit(pathless string) Circuit {
+	if pathless == "" {
+		pathless = "http://localhost:1000"
+	}
+
 	return &circuit{
 		router:   http.NewServeMux(),
 		pathless: pathless,
-		api:      apiUrl,
 	}
 }
 
@@ -46,9 +50,6 @@ func (c *circuit) Pathless() string {
 	return c.pathless
 }
 
-func (c *circuit) Api() string {
-	return c.api
-}
 func (c *circuit) Handle(data []byte) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -123,6 +124,26 @@ func (c *circuit) addRoute(prefix string, v *Value) {
 		w.Header().Set("Content-Encoding", "gzip")
 		w.Write(v.Data)
 	})
+}
+
+func (c *circuit) ToBytes(input string) []byte {
+	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") {
+		resp, err := http.Get(input)
+		if err != nil {
+			return nil
+		}
+		defer resp.Body.Close()
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil
+		}
+		return b
+	}
+	b, err := os.ReadFile(input)
+	if err != nil {
+		return nil
+	}
+	return b
 }
 
 func (c *circuit) Compress(data []byte) []byte {

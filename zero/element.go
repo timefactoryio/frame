@@ -15,14 +15,20 @@ import (
 	h "github.com/yuin/goldmark/renderer/html"
 )
 
-//go:embed html/slides.html
+//go:embed embed/slides.html
 var slidesHtml string
 
-//go:embed html/text.html
+//go:embed embed/text.html
 var textHtml string
 
-//go:embed html/layouts.json
-var layoutsJson string
+//go:embed embed/layouts.json
+var layoutsJson []byte
+
+//go:embed embed/home.html
+var homeHtml string
+
+//go:embed embed/homewithfooter.html
+var homeWithFooterHtml string
 
 type Element interface {
 	HTML(html string) *One
@@ -31,7 +37,8 @@ type Element interface {
 	Markdown() *goldmark.Markdown
 	TextTemplate() string
 	SlidesTemplate() string
-	Layouts() string
+	HomeTemplate() string
+	Layouts() []byte
 	H1(s string) *One
 	H2(s string) *One
 	H3(s string) *One
@@ -83,8 +90,16 @@ func NewElement() Element {
 	}
 }
 
-func (e *element) Layouts() string {
+func (e *element) Layouts() []byte {
 	return layoutsJson
+}
+
+func (e *element) HomeTemplate() string {
+	return homeHtml
+}
+
+func (e *element) HomeWithFooterTemplate() string {
+	return homeWithFooterHtml
 }
 
 func (e *element) TextTemplate() string {

@@ -1,0 +1,50 @@
+<style>
+	.home {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		width: 100%;
+		text-align: center;
+		box-sizing: border-box;
+		overflow: hidden;
+	}
+	.home img {
+		max-width: 95%;
+		max-height: 30vh;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+	}
+	.home h1 {
+		color: inherit;
+		width: 100%;
+		white-space: nowrap;
+		overflow: hidden;
+		font-size: clamp(2rem, 3vw, 3rem);
+		margin: 0;
+	}
+	.home .footer {
+		display: flex;
+		justify-content: center;
+		gap: 1.5em;
+		margin-top: 1.5em;
+	}
+	.home .footer img {
+		width: 2em;
+		height: 2em;
+		max-width: 2em;
+		max-height: 2em;
+	}
+</style>
+<div class="home">
+	<img src="{{.LOGO}}" alt="logo" />
+	<h1>{{.HEADING}}</h1>
+	<h2>Press 'Z' to begin</h2>
+	<div class="footer">
+		<a href="{{.LINK}}" target="_blank" rel="noopener">
+			<img src="{{.ICON}}" alt="{{.ALT}}" />
+		</a>
+	</div>
+</div>
