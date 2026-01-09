@@ -91,8 +91,9 @@ func (z *Zero) Text2(path string) {
 			return match
 		}
 
+		compressed := z.Compress(imgData)
 		mimeType := http.DetectContentType(imgData)
-		encoded := base64.StdEncoding.EncodeToString(imgData)
+		encoded := base64.StdEncoding.EncodeToString(compressed)
 		dataURI := "data:" + mimeType + ";base64," + encoded
 		return strings.Replace(match, imgSrc, dataURI, 1)
 	})
