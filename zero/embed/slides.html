@@ -33,7 +33,7 @@
 				img.alt = slide.Name;
 			}
 
-			pathless.fetch(window.apiUrl + '/' + prefix).then(({ data }) => {
+			pathless.fetch(window.apiUrl + '/' + prefix).then((data) => {
 				slides = data || [];
 				if (slides.length) show(index);
 			});
