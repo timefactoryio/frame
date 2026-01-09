@@ -15,15 +15,18 @@ type Circuit interface {
 	Router() *http.ServeMux
 	Handle(data []byte) http.HandlerFunc
 	Reader(path string) string
+	ReaderV2(path string, compress bool) string
 	Pathless() string
 	ToBytes(input string) []byte
 	ToString(input string) string
 	Compress(data []byte) []byte
+	Value() map[string][]*Value
 }
 
 type circuit struct {
 	router   *http.ServeMux
 	pathless string
+	value    map[string][]*Value
 }
 
 type Value struct {
@@ -40,7 +43,12 @@ func NewCircuit(pathless string) Circuit {
 	return &circuit{
 		router:   http.NewServeMux(),
 		pathless: pathless,
+		value:    make(map[string][]*Value),
 	}
+}
+
+func (c *circuit) Value() map[string][]*Value {
+	return c.value
 }
 
 func (c *circuit) Router() *http.ServeMux {

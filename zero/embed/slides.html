@@ -18,35 +18,22 @@
 	<img src="" alt="" />
 	<script>
 		(function () {
-			const frame = pathless.frame();
 			const prefix = '{{.PREFIX}}';
-			const apiBase = window.apiUrl + '/' + prefix;
-			const apiImgUrl = (slide) => apiBase + '/' + slide;
-
 			let slides = [];
 			let index = pathless.state()[prefix] || 0;
 
-			async function show(i) {
+			function show(i) {
 				if (!slides.length) return;
 				index = ((i % slides.length) + slides.length) % slides.length;
 				pathless.update(prefix, index);
 
-				const img = frame.querySelector('img');
-				if (!img) return;
-
 				const slide = slides[index];
-				pathless
-					.fetch(apiImgUrl(slide))
-					.then(({ data }) => {
-						img.src = data;
-						img.alt = slide;
-					})
-					.catch(() => {
-						img.alt = 'Failed to load image';
-					});
+				const img = pathless.frame().querySelector('img');
+				img.src = 'data:' + slide.Type + ';base64,' + slide.Data;
+				img.alt = slide.Name;
 			}
 
-			pathless.fetch(apiBase).then(({ data }) => {
+			pathless.fetch(window.apiUrl + '/' + prefix).then(({ data }) => {
 				slides = data || [];
 				if (slides.length) show(index);
 			});

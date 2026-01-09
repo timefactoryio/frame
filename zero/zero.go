@@ -79,3 +79,21 @@ func (z *Zero) Slides(dir string) {
 	html := One(template.HTML(buf.String()))
 	z.Build("slides", &html)
 }
+
+func (z *Zero) SlidesV2(dir string, compress bool) {
+	prefix := z.ReaderV2(dir, compress)
+
+	tmpl, err := template.New("slides").Parse(z.SlidesTemplate())
+	if err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	data := map[string]string{"PREFIX": prefix}
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return
+	}
+
+	html := One(template.HTML(buf.String()))
+	z.Build("slides", &html)
+}
