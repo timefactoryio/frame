@@ -17,7 +17,6 @@ type Circuit interface {
 	Router() *http.ServeMux
 	Read(path, prefix string)
 	Reader(path string) string
-	Pathless() string
 	ToBytes(input string) []byte
 	ToString(input string) string
 	Compress(data []byte) []byte
@@ -25,9 +24,8 @@ type Circuit interface {
 }
 
 type circuit struct {
-	router   *http.ServeMux
-	pathless string
-	value    map[string][]*Value
+	router *http.ServeMux
+	value  map[string][]*Value
 }
 
 type Value struct {
@@ -36,15 +34,10 @@ type Value struct {
 	Data []byte
 }
 
-func NewCircuit(pathless string) Circuit {
-	if pathless == "" {
-		pathless = "http://localhost:1000"
-	}
-
+func NewCircuit() Circuit {
 	return &circuit{
-		router:   http.NewServeMux(),
-		pathless: pathless,
-		value:    make(map[string][]*Value),
+		router: http.NewServeMux(),
+		value:  make(map[string][]*Value),
 	}
 }
 
@@ -54,10 +47,6 @@ func (c *circuit) Value() map[string][]*Value {
 
 func (c *circuit) Router() *http.ServeMux {
 	return c.router
-}
-
-func (c *circuit) Pathless() string {
-	return c.pathless
 }
 
 func (c *circuit) ToBytes(input string) []byte {

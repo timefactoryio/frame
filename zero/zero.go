@@ -12,11 +12,11 @@ type Zero struct {
 	Circuit
 }
 
-func NewZero(pathless string) *Zero {
+func NewZero() *Zero {
 	return &Zero{
 		Forge:   NewForge().(*forge),
 		Element: NewElement().(*element),
-		Circuit: NewCircuit(pathless).(*circuit),
+		Circuit: NewCircuit().(*circuit),
 	}
 }
 

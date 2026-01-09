@@ -13,9 +13,24 @@ type Frame struct {
 }
 
 func NewFrame(pathless string) *Frame {
-	return &Frame{
-		Zero: zero.NewZero(pathless),
+	f := &Frame{
+		Zero: zero.NewZero(),
 	}
+	if pathless == "" {
+		pathless = "http://localhost:1000"
+	}
+
+	go func() {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", pathless)
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Access-Control-Allow-Methods", "GET")
+			f.Router().ServeHTTP(w, r)
+		})
+		http.ListenAndServe(":1001", handler)
+	}()
+	f.Router().HandleFunc("/", f.HandleFrame)
+	return f
 }
 
 func (f *Frame) Start() {
@@ -37,16 +52,6 @@ func (f *Frame) Start() {
 	jsonData, _ := json.Marshal(response)
 	f.Hello = f.Compress(jsonData)
 
-	go func() {
-		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", f.Pathless())
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-			w.Header().Set("Access-Control-Allow-Methods", "GET")
-			f.Router().ServeHTTP(w, r)
-		})
-		http.ListenAndServe(":1001", handler)
-	}()
-	f.Router().HandleFunc("/", f.HandleFrame)
 }
 
 func (f *Frame) HandleFrame(w http.ResponseWriter, r *http.Request) {
