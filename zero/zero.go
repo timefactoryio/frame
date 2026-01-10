@@ -9,6 +9,7 @@ import (
 type Zero struct {
 	Forge
 	Element
+	Embed
 	Circuit
 }
 
@@ -17,6 +18,7 @@ func NewZero() *Zero {
 		Forge:   NewForge().(*forge),
 		Element: NewElement().(*element),
 		Circuit: NewCircuit().(*circuit),
+		Embed:   NewEmbed().(*embed),
 	}
 }
 

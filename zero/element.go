@@ -1,7 +1,6 @@
 package zero
 
 import (
-	_ "embed"
 	"fmt"
 	"html"
 	"html/template"
@@ -15,27 +14,11 @@ import (
 	h "github.com/yuin/goldmark/renderer/html"
 )
 
-//go:embed embed/slides.html
-var slidesHtml string
-
-//go:embed embed/text.html
-var textHtml string
-
-//go:embed embed/layouts.json
-var layoutsJson []byte
-
-//go:embed embed/home.html
-var homeHtml string
-
 type Element interface {
 	HTML(html string) *One
 	JS(js string) One
 	CSS(css string) One
 	Markdown() *goldmark.Markdown
-	TextTemplate() string
-	SlidesTemplate() string
-	HomeTemplate() string
-	Layouts() []byte
 	H1(s string) *One
 	H2(s string) *One
 	H3(s string) *One
@@ -85,22 +68,6 @@ func NewElement() Element {
 	return &element{
 		Md: initGoldmark(),
 	}
-}
-
-func (e *element) Layouts() []byte {
-	return layoutsJson
-}
-
-func (e *element) HomeTemplate() string {
-	return homeHtml
-}
-
-func (e *element) TextTemplate() string {
-	return textHtml
-}
-
-func (e *element) SlidesTemplate() string {
-	return slidesHtml
 }
 
 func Tag(tag, text string) *One {
