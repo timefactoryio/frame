@@ -20,15 +20,15 @@
 		(function () {
 			const prefix = '{{.PREFIX}}';
 			let slides = [];
-			let index = pathless.state()[prefix] || 0;
+			let index = pathless.read()[prefix] || 0;
+			const img = pathless.frame().querySelector('img');
 
 			function show(i) {
 				if (!slides.length) return;
 				index = ((i % slides.length) + slides.length) % slides.length;
-				pathless.update(prefix, index);
+				pathless.write(prefix, index);
 
 				const slide = slides[index];
-				const img = pathless.frame().querySelector('img');
 				img.src = 'data:' + slide.Type + ';base64,' + slide.Data;
 				img.alt = slide.Name;
 			}

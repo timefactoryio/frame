@@ -134,9 +134,9 @@
 		const frame = pathless.frame();
 		const key = 'scroll';
 
-		frame.scrollTop = pathless.state()[key] || 0;
+		frame.scrollTop = pathless.read()[key] || 0;
 		frame.addEventListener('scroll', () =>
-			pathless.update(key, frame.scrollTop)
+			pathless.write(key, frame.scrollTop)
 		);
 
 		let speed = 0;
