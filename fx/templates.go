@@ -1,4 +1,4 @@
-package zero
+package fx
 
 import (
 	"bytes"
@@ -6,29 +6,13 @@ import (
 	"strings"
 )
 
-type Zero struct {
-	Forge
-	Element
-	Embed
-	Circuit
-}
-
-func NewZero() *Zero {
-	return &Zero{
-		Forge:   NewForge().(*forge),
-		Element: NewElement().(*element),
-		Circuit: NewCircuit().(*circuit),
-		Embed:   NewEmbed().(*embed),
-	}
-}
-
-func (z *Zero) Home(logo, heading string) {
-	logoEmbed := z.ToString(logo)
+func (fx *Fx) Home(logo, heading string) {
+	logoEmbed := fx.ToString(logo)
 	if logoEmbed == "" {
 		return
 	}
 
-	tmpl := template.Must(template.New("home").Parse(homeHtml))
+	tmpl := template.Must(template.New("home").Parse(fx.HomeTemplate))
 
 	var buf strings.Builder
 	if err := tmpl.Execute(&buf, map[string]template.HTML{
@@ -39,17 +23,17 @@ func (z *Zero) Home(logo, heading string) {
 	}
 
 	o := One(template.HTML(buf.String()))
-	z.Build("", &o)
+	fx.Build("", &o)
 }
 
-func (z *Zero) Text(path string) {
-	content := z.ToBytes(path)
+func (fx *Fx) Text(path string) {
+	content := fx.ToBytes(path)
 	if content == nil {
 		return
 	}
 
 	var buf bytes.Buffer
-	if err := (*z.Markdown()).Convert(content, &buf); err != nil {
+	if err := (*fx.Markdown()).Convert(content, &buf); err != nil {
 		return
 	}
 
@@ -60,14 +44,14 @@ func (z *Zero) Text(path string) {
 	html = strings.ReplaceAll(html, "\"/></p>", "\"/>")
 
 	markdown := One(template.HTML(html))
-	template := One(template.HTML(z.TextTemplate()))
-	z.Build("text", &markdown, &template)
+	template := One(template.HTML(fx.TextTemplate))
+	fx.Build("text", &markdown, &template)
 }
 
-func (z *Zero) Slides(dir string) {
-	prefix := z.Reader(dir)
+func (fx *Fx) Slides(dir string) {
+	prefix := fx.Reader(dir)
 
-	tmpl, err := template.New("slides").Parse(z.SlidesTemplate())
+	tmpl, err := template.New("slides").Parse(fx.SlidesTemplate)
 	if err != nil {
 		return
 	}
@@ -79,5 +63,5 @@ func (z *Zero) Slides(dir string) {
 	}
 
 	html := One(template.HTML(buf.String()))
-	z.Build("slides", &html)
+	fx.Build("slides", &html)
 }
