@@ -131,45 +131,41 @@
 </style>
 <script>
 	(function () {
-		const frame = pathless.frame();
-		const key = 'scroll';
+		const scrollKey = 'scroll';
+		const f = frame();
 
-		frame.scrollTop = pathless.read()[key] || 0;
-		frame.addEventListener('scroll', () =>
-			pathless.write(key, frame.scrollTop)
+		f.scrollTop = pathless.read()[scrollKey] || 0;
+		f.addEventListener('scroll', () =>
+			pathless.write(scrollKey, f.scrollTop),
 		);
 
 		let speed = 0;
 		let animating = false;
 
-		function scroll() {
+		function animate() {
 			if (speed === 0) {
 				animating = false;
 				return;
 			}
-			frame.scrollBy({ top: speed });
-			requestAnimationFrame(scroll);
+			f.scrollBy({ top: speed });
+			requestAnimationFrame(animate);
 		}
 
-		function startScroll(s) {
+		function setSpeed(s) {
 			speed = s;
 			if (!animating) {
 				animating = true;
-				scroll();
-			}
-		}
-
-		function stopScroll(key) {
-			if (['w', 's'].includes(key)) {
-				speed = 0;
+				animate();
 			}
 		}
 
 		window.addEventListener('keyup', (e) => {
-			stopScroll(e.key.toLowerCase());
+			if (['w', 's'].includes(e.key.toLowerCase())) {
+				speed = 0;
+			}
 		});
 
-		pathless.onKey('w', () => startScroll(-30), '↑');
-		pathless.onKey('s', () => startScroll(30), '↓');
+		onKey('w', () => setSpeed(-30), '↑');
+		onKey('s', () => setSpeed(30), '↓');
 	})();
 </script>

@@ -19,9 +19,9 @@
 	<script>
 		(function () {
 			const prefix = '{{.PREFIX}}';
+			const img = frame().querySelector('img');
 			let slides = [];
 			let index = pathless.read()[prefix] || 0;
-			const img = pathless.frame().querySelector('img');
 
 			function show(i) {
 				if (!slides.length) return;
@@ -29,17 +29,17 @@
 				pathless.write(prefix, index);
 
 				const slide = slides[index];
-				img.src = 'data:' + slide.Type + ';base64,' + slide.Data;
+				img.src = `data:${slide.Type};base64,${slide.Data}`;
 				img.alt = slide.Name;
 			}
 
-			pathless.fetch(window.apiUrl + '/' + prefix).then((data) => {
+			pathless.fetch(`${window.apiUrl}/${prefix}`).then((data) => {
 				slides = data || [];
 				if (slides.length) show(index);
 			});
 
-			pathless.onKey('a', () => show(index - 1), '←');
-			pathless.onKey('d', () => show(index + 1), '→');
+			onKey('a', () => show(index - 1), '←');
+			onKey('d', () => show(index + 1), '→');
 		})();
 	</script>
 </div>
