@@ -63,14 +63,12 @@
 	<div class="key d"></div>
 </div>
 <script>
-	(function () {
-		document.querySelectorAll('.key').forEach((key) => {
-			const top = document.createElement('div');
-			const bottom = document.createElement('div');
-			top.className = 'top';
-			bottom.className = 'bottom';
-			key.appendChild(top);
-			key.appendChild(bottom);
-		});
-	})();
+	document.querySelectorAll('.key').forEach((key) => {
+		const top = document.createElement('div');
+		const bottom = document.createElement('div');
+		top.className = 'top';
+		bottom.className = 'bottom';
+		key.appendChild(top);
+		key.appendChild(bottom);
+	});
 </script>
