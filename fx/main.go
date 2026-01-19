@@ -18,7 +18,7 @@ type Fx struct {
 type universe struct {
 	Frames   []string        `json:"frames"`
 	Layouts  json.RawMessage `json:"layouts"`
-	Keyboard string
+	Keyboard string          `json:"keyboard"`
 }
 
 func NewFx() *Fx {

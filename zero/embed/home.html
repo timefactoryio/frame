@@ -3,12 +3,21 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		justify-content: space-between;
 		height: 100%;
 		width: 100%;
 		text-align: center;
 		box-sizing: border-box;
 		overflow: hidden;
+		padding: 2em;
+	}
+	.home .content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2em;
+		flex: 1;
+		justify-content: center;
 	}
 	.home svg {
 		max-width: 95%;
@@ -24,8 +33,37 @@
 		font-size: clamp(2rem, 3vw, 3rem);
 		margin: 0;
 	}
+	.home .actions {
+		display: flex;
+		justify-content: center;
+		padding-bottom: 2em;
+	}
+	.home .actions.hide {
+		display: none;
+	}
+	.home button {
+		padding: 0.5em 1.5em;
+		font-size: clamp(1rem, 2vw, 1.5rem);
+		background: black;
+		color: #fff;
+		border-radius: 5px;
+		cursor: pointer;
+		border: none;
+	}
+	.home kbd {
+		border: 2px solid blue;
+		padding: 0.3em 0.6em;
+		border-radius: 3px;
+		font-weight: bold;
+		margin-left: 0.3em;
+	}
 </style>
 <div class="home">
-	{{.LOGO}}
-	<h1>{{.HEADING}}</h1>
+	<div class="content">
+		{{.LOGO}}
+		<h1>{{.HEADING}}</h1>
+	</div>
+	<div class="actions">
+		<button>Press<kbd>Z</kbd></button>
+	</div>
 </div>
