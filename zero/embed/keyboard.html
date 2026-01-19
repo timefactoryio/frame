@@ -25,7 +25,7 @@
 	.key.pressed {
 		border-color: white;
 	}
-	.key > :first-child {
+	.key .top {
 		height: 2em;
 		display: flex;
 		align-items: center;
@@ -33,15 +33,15 @@
 		font-size: 1.2em;
 		color: #aaa;
 	}
-	.key > :last-child {
+	.key .bottom {
 		flex: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		font-size: 1.5em;
 	}
-	.key.q > :last-child,
-	.key.e > :last-child {
+	.key.q .bottom,
+	.key.e .bottom {
 		font-size: 1em;
 	}
 	.key svg {
@@ -52,40 +52,25 @@
 	}
 </style>
 <div class="grid">
-	<div class="key 1">
-		<div></div>
-		<div></div>
-	</div>
-	<div class="key 2">
-		<div></div>
-		<div></div>
-	</div>
-	<div class="key 3">
-		<div></div>
-		<div></div>
-	</div>
-	<div class="key q">
-		<div></div>
-		<div></div>
-	</div>
-	<div class="key w">
-		<div></div>
-		<div></div>
-	</div>
-	<div class="key e">
-		<div></div>
-		<div></div>
-	</div>
-	<div class="key a">
-		<div></div>
-		<div></div>
-	</div>
-	<div class="key s">
-		<div></div>
-		<div></div>
-	</div>
-	<div class="key d">
-		<div></div>
-		<div></div>
-	</div>
+	<div class="key 1"></div>
+	<div class="key 2"></div>
+	<div class="key 3"></div>
+	<div class="key q"></div>
+	<div class="key w"></div>
+	<div class="key e"></div>
+	<div class="key a"></div>
+	<div class="key s"></div>
+	<div class="key d"></div>
 </div>
+<script>
+	(function () {
+		document.querySelectorAll('.key').forEach((key) => {
+			const top = document.createElement('div');
+			const bottom = document.createElement('div');
+			top.className = 'top';
+			bottom.className = 'bottom';
+			key.appendChild(top);
+			key.appendChild(bottom);
+		});
+	})();
+</script>
