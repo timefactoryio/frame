@@ -16,8 +16,9 @@ type Fx struct {
 }
 
 type universe struct {
-	Frames  []string        `json:"frames"`
-	Layouts json.RawMessage `json:"layouts"`
+	Frames   []string        `json:"frames"`
+	Layouts  json.RawMessage `json:"layouts"`
+	Keyboard json.RawMessage `json:"keyboard,omitempty"`
 }
 
 func NewFx() *Fx {
@@ -38,8 +39,9 @@ func (fx *Fx) BuildHello() {
 	}
 
 	u := &universe{
-		Frames:  frames,
-		Layouts: json.RawMessage(fx.Layouts),
+		Frames:   frames,
+		Layouts:  json.RawMessage(fx.Layouts),
+		Keyboard: json.RawMessage(fx.Keyboard),
 	}
 
 	if jsonData, err := json.Marshal(u); err == nil {
