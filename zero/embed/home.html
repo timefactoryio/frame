@@ -68,6 +68,7 @@
 
 		function updateVisibility() {
 			const shouldShow =
+				!window.pathless?.controlPanel.visible &&
 				window.pathless?.focused === 0 &&
 				window.pathless?.space[0].frame[0] === 0 &&
 				window.pathless?.layout[0] === 0;
@@ -78,6 +79,7 @@
 			window.pathless?.togglePanel();
 			updateVisibility();
 		});
+
 		updateVisibility();
 	})();
 </script>
