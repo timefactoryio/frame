@@ -42,9 +42,10 @@
 		cursor: pointer;
 		border: none;
 		margin-bottom: 2em;
-	}
-	.home button.hide {
 		display: none;
+	}
+	.home button.show {
+		display: block;
 	}
 	.home kbd {
 		border: 2px solid blue;
@@ -70,9 +71,9 @@
 				window.pathless?.focused === 0 &&
 				window.pathless?.space[0].frame[0] === 0 &&
 				window.pathless?.layout[0] === 0;
-
-			button.classList.toggle('hide', !shouldShow);
+			button.classList.toggle('show', shouldShow);
 		}
+
 		button.addEventListener('click', () => {
 			window.pathless?.togglePanel();
 			updateVisibility();
