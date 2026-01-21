@@ -3,7 +3,6 @@ package fx
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"github.com/timefactoryio/frame/zero"
 )
@@ -48,32 +47,6 @@ func (fx *Fx) BuildHello() {
 	if jsonData, err := json.Marshal(u); err == nil {
 		fx.Hello = fx.Compress(jsonData)
 	}
-}
-
-func (fx *Fx) BuildHelloTest(keyboardPath string) error {
-	frames := make([]string, 0, len(fx.Frames()))
-	for _, frame := range fx.Frames() {
-		if frame != nil {
-			frames = append(frames, string(*frame))
-		}
-	}
-
-	kb, err := os.ReadFile(keyboardPath)
-	if err != nil {
-		return err
-	}
-
-	u := &universe{
-		Frames:   frames,
-		Layouts:  json.RawMessage(fx.Layouts),
-		Keyboard: string(kb),
-	}
-
-	if jsonData, err := json.Marshal(u); err == nil {
-		fx.Hello = fx.Compress(jsonData)
-	}
-
-	return nil
 }
 
 func (fx *Fx) HandleHello(w http.ResponseWriter, r *http.Request) {
