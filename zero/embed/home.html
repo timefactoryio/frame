@@ -33,14 +33,6 @@
 		font-size: clamp(2rem, 3vw, 3rem);
 		margin: 0;
 	}
-	.home .actions {
-		display: flex;
-		justify-content: center;
-		padding-bottom: 2em;
-	}
-	.home .actions.hide {
-		display: none;
-	}
 	.home button {
 		padding: 0.5em 1.5em;
 		font-size: clamp(1rem, 2vw, 1.5rem);
@@ -49,6 +41,10 @@
 		border-radius: 5px;
 		cursor: pointer;
 		border: none;
+		margin-bottom: 2em;
+	}
+	.home button.hide {
+		display: none;
 	}
 	.home kbd {
 		border: 2px solid blue;
@@ -63,18 +59,24 @@
 		{{.LOGO}}
 		<h1>{{.HEADING}}</h1>
 	</div>
-	<div class="actions">
-		<button>Press<kbd>Z</kbd></button>
-	</div>
+	<button>Press<kbd>Z</kbd></button>
 </div>
 <script>
 	(() => {
-		const actions = document.querySelector('.home .actions');
-		const button = actions.querySelector('button');
+		const button = document.querySelector('.home button');
 
+		function updateVisibility() {
+			const shouldShow =
+				window.pathless?.focused === 0 &&
+				window.pathless?.space[0].frame[0] === 0 &&
+				window.pathless?.layout[0] === 0;
+
+			button.classList.toggle('hide', !shouldShow);
+		}
 		button.addEventListener('click', () => {
-			actions.classList.add('hide');
 			window.pathless?.togglePanel();
+			updateVisibility();
 		});
+		updateVisibility();
 	})();
 </script>
