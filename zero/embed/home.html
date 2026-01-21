@@ -63,7 +63,6 @@
 <script>
 	(() => {
 		const button = document.querySelector('.home button');
-
 		function updateVisibility() {
 			const shouldShow =
 				!window.pathless?.controlPanel.visible &&
@@ -72,12 +71,10 @@
 				window.pathless?.layout[0] === 0;
 			button.classList.toggle('show', shouldShow);
 		}
-
 		button.addEventListener('click', () => {
 			window.pathless?.togglePanel();
 			updateVisibility();
 		});
-
 		updateVisibility();
 	})();
 </script>
