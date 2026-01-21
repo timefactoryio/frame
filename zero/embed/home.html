@@ -67,3 +67,14 @@
 		<button>Press<kbd>Z</kbd></button>
 	</div>
 </div>
+<script>
+	(() => {
+		const actions = document.querySelector('.home .actions');
+		const button = actions.querySelector('button');
+
+		button.addEventListener('click', () => {
+			actions.classList.add('hide');
+			window.pathless?.togglePanel();
+		});
+	})();
+</script>
