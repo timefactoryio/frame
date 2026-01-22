@@ -26,6 +26,28 @@ func (fx *Fx) Home(logo, heading string) {
 	fx.Build("", &o)
 }
 
+func (fx *Fx) HomeTest(logo, heading, html string) {
+	home := fx.ToString(html)
+
+	logoEmbed := fx.ToString(logo)
+	if logoEmbed == "" {
+		return
+	}
+
+	tmpl := template.Must(template.New("home").Parse(home))
+
+	var buf strings.Builder
+	if err := tmpl.Execute(&buf, map[string]template.HTML{
+		"LOGO":    template.HTML(logoEmbed),
+		"HEADING": template.HTML(heading),
+	}); err != nil {
+		return
+	}
+
+	o := One(template.HTML(buf.String()))
+	fx.Build("", &o)
+}
+
 func (fx *Fx) Text(path string) {
 	content := fx.ToBytes(path)
 	if content == nil {
