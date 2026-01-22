@@ -25,6 +25,15 @@ func (f *Frame) Start(pathless string) {
 	f.Router().HandleFunc("/", f.HandleHello)
 	go f.serve(pathless)
 }
+func (f *Frame) StartTest(pathless, keyboardHtml string) {
+	if pathless == "" {
+		pathless = "http://localhost:1000"
+	}
+
+	f.BuildHelloTest(keyboardHtml)
+	f.Router().HandleFunc("/", f.HandleHello)
+	go f.serve(pathless)
+}
 
 func (f *Frame) serve(pathless string) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
