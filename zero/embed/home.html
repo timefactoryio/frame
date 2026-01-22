@@ -62,19 +62,24 @@
 </div>
 <script>
 	(() => {
+		const u = window.pathless;
 		const button = document.querySelector('.home button');
+
 		function updateVisibility() {
+			const panelVisible = u?.space[3].el.classList.contains('show');
 			const shouldShow =
-				!window.pathless?.controlPanel.visible &&
-				window.pathless?.focused === 0 &&
-				window.pathless?.space[0].frame[0] === 0 &&
-				window.pathless?.layout[0] === 0;
+				!panelVisible &&
+				u?.focused === 0 &&
+				u?.space[0].frame[0] === 0 &&
+				u?.layout[0] === 0;
 			button.classList.toggle('show', shouldShow);
 		}
+
 		button.addEventListener('click', () => {
-			window.pathless?.togglePanel();
+			u?.togglePanel();
 			updateVisibility();
 		});
+
 		updateVisibility();
 	})();
 </script>
