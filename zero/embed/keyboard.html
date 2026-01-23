@@ -35,7 +35,7 @@
 	.key.pressed {
 		border-color: white;
 	}
-	.key .content {
+	.content {
 		flex: 1;
 		display: flex;
 		align-items: center;
@@ -50,55 +50,67 @@
 	.key[data-key='e'] .content {
 		font-size: 0.85em;
 	}
-	.key .content svg {
+	.content svg {
 		max-width: 100%;
 		max-height: 100%;
-		width: auto;
-		height: auto;
 	}
 </style>
-<div class="keyboard">
-	<div class="key" data-key="1"><div class="content"></div></div>
-	<div class="key" data-key="2"><div class="content"></div></div>
-	<div class="key" data-key="3"><div class="content"></div></div>
-	<div class="key" data-key="q"><div class="content"></div></div>
-	<div class="key" data-key="w"><div class="content"></div></div>
-	<div class="key" data-key="e"><div class="content"></div></div>
-	<div class="key" data-key="a"><div class="content"></div></div>
-	<div class="key" data-key="s"><div class="content"></div></div>
-	<div class="key" data-key="d"><div class="content"></div></div>
-</div>
+
+<div class="keyboard"></div>
+
 <script>
-	(() => {
-		const u = window.pathless;
-		['1', '2', '3', 'q', 'w', 'e', 'a', 's', 'd'].forEach((key) => {
-			const keyEl = document.querySelector(`.key[data-key="${key}"]`);
-			if (!keyEl) return;
-
-			const content = keyEl.querySelector('.content');
-			const bind = u.keybinds.get(key);
-			if (!bind || (!bind.desc && !['1', '2', '3'].includes(key))) {
-				content.innerHTML = '';
-				if (bind) bind.el = keyEl;
-				return;
+	if (!window.pathless.keyboard) {
+		class Keyboard {
+			static KEYS = '123qweasd';
+			constructor(u) {
+				this.u = u;
+				this.els = {};
+				this.build();
+				this.render();
 			}
-			bind.el = keyEl;
-			if (['1', '2', '3'].includes(key)) {
-				const n = parseInt(key);
-				const layout = u.layouts[n - 1];
-				if (!layout) return;
 
-				const variantIdx =
-					n === 1
-						? 0
-						: u.layout[0] === n - 1
-							? (u.layout[1] + 1) % layout.variants.length
-							: 0;
-
-				content.innerHTML = layout.variants[variantIdx].svg;
-			} else {
-				content.textContent = bind.desc;
+			build() {
+				const frag = document.createDocumentFragment();
+				for (const k of Keyboard.KEYS) {
+					const el = document.createElement('div');
+					el.className = 'key';
+					el.dataset.key = k;
+					el.innerHTML = '<div class="content"></div>';
+					frag.appendChild(el);
+					this.els[k] = { key: el, content: el.firstChild };
+				}
+				document.querySelector('.keyboard').appendChild(frag);
 			}
-		});
-	})();
+
+			render() {
+				const { layouts, layout, keybinds } = this.u;
+				for (const k of Keyboard.KEYS) {
+					const { content } = this.els[k];
+					const n = parseInt(k);
+
+					if (n) {
+						const l = layouts[n - 1];
+						if (!l) {
+							content.innerHTML = '';
+							continue;
+						}
+						const idx =
+							n === 1 || layout[0] !== n - 1
+								? 0
+								: (layout[1] + 1) % l.variants.length;
+						content.innerHTML = l.variants[idx].svg;
+					} else {
+						content.textContent = keybinds.get(k)?.desc ?? '';
+					}
+				}
+			}
+			press(k) {
+				this.els[k]?.key.classList.add('pressed');
+			}
+			release(k) {
+				this.els[k]?.key.classList.remove('pressed');
+			}
+		}
+		window.pathless.keyboard = new Keyboard(window.pathless);
+	}
 </script>
