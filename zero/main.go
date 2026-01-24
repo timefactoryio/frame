@@ -19,16 +19,12 @@ var keyboardHtml string
 //go:embed embed/layouts.json
 var layoutsJson []byte
 
-//go:embed embed/focus.json
-var focus []byte
-
 type Zero struct {
 	SlidesTemplate string
 	TextTemplate   string
 	HomeTemplate   string
 	Keyboard       string
 	Layouts        []byte
-	Focus          []byte
 }
 
 func NewZero() *Zero {
@@ -38,6 +34,5 @@ func NewZero() *Zero {
 		HomeTemplate:   homeHtml,
 		Layouts:        layoutsJson,
 		Keyboard:       keyboardHtml,
-		Focus:          focus,
 	}
 }
