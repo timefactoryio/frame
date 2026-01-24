@@ -14,32 +14,31 @@
 	}
 </style>
 
-<div class="slides">
-	<img src="" alt="" />
-	<script>
-		(function () {
-			const prefix = '{{.PREFIX}}';
-			const img = frame().querySelector('img');
-			let slides = [];
-			let index = pathless.read()[prefix] || 0;
+<img src="" alt="" />
 
-			function show(i) {
-				if (!slides.length) return;
-				index = ((i % slides.length) + slides.length) % slides.length;
-				pathless.write(prefix, index);
+<script>
+	(function () {
+		const prefix = '{{.PREFIX}}';
+		const img = frame().querySelector('img');
+		let slides = [];
+		let index = pathless.read()[prefix] || 0;
 
-				const slide = slides[index];
-				img.src = `data:${slide.Type};base64,${slide.Data}`;
-				img.alt = slide.Name;
-			}
+		function show(i) {
+			if (!slides.length) return;
+			index = ((i % slides.length) + slides.length) % slides.length;
+			pathless.write(prefix, index);
 
-			pathless.fetch(`${window.apiUrl}/${prefix}`).then((data) => {
-				slides = data || [];
-				if (slides.length) show(index);
-			});
+			const slide = slides[index];
+			img.src = `data:${slide.Type};base64,${slide.Data}`;
+			img.alt = slide.Name;
+		}
 
-			onKey('a', () => show(index - 1), '←');
-			onKey('d', () => show(index + 1), '→');
-		})();
-	</script>
-</div>
+		pathless.fetch(`${window.apiUrl}/${prefix}`).then((data) => {
+			slides = data || [];
+			if (slides.length) show(index);
+		});
+
+		onKey('a', () => show(index - 1), '←');
+		onKey('d', () => show(index + 1), '→');
+	})();
+</script>
