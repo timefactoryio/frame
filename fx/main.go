@@ -64,11 +64,16 @@ func (fx *Fx) BuildHelloTest(keyboardPath, tabPath string) error {
 		return err
 	}
 
+	t, err := os.ReadFile(tabPath)
+	if err != nil {
+		return err
+	}
+
 	u := &universe{
 		Frames:   frames,
 		Layouts:  json.RawMessage(fx.Layouts),
 		Keyboard: string(kb),
-		Tab:      tabPath,
+		Tab:      string(t),
 	}
 
 	if jsonData, err := json.Marshal(u); err == nil {
