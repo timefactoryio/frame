@@ -20,7 +20,6 @@ type universe struct {
 	Frames   []string        `json:"frames"`
 	Layouts  json.RawMessage `json:"layouts"`
 	Keyboard string          `json:"keyboard"`
-	Tab      string          `json:"tab,omitempty"`
 }
 
 func NewFx() *Fx {
@@ -51,7 +50,7 @@ func (fx *Fx) BuildHello() {
 	}
 }
 
-func (fx *Fx) BuildHelloTest(keyboardPath, tabPath string) error {
+func (fx *Fx) BuildHelloTest(keyboardPath string) error {
 	frames := make([]string, 0, len(fx.Frames()))
 	for _, frame := range fx.Frames() {
 		if frame != nil {
@@ -64,16 +63,10 @@ func (fx *Fx) BuildHelloTest(keyboardPath, tabPath string) error {
 		return err
 	}
 
-	t, err := os.ReadFile(tabPath)
-	if err != nil {
-		return err
-	}
-
 	u := &universe{
 		Frames:   frames,
 		Layouts:  json.RawMessage(fx.Layouts),
 		Keyboard: string(kb),
-		Tab:      string(t),
 	}
 
 	if jsonData, err := json.Marshal(u); err == nil {
