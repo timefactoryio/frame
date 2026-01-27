@@ -64,15 +64,16 @@
 	(() => {
 		const button = document.querySelector('.home button');
 		function updateVisibility() {
+			const u = window.pathless;
 			const shouldShow =
-				!window.pathless?.space[3].visible &&
-				window.pathless?.focused === 0 &&
-				window.pathless?.space[0].index === 0 &&
-				window.pathless?.layout[0] === 0;
+				!u?.keyboardVisible &&
+				u?.focused === 0 &&
+				u?.space[0].index === 0 &&
+				u?.layout[0] === 0;
 			button.classList.toggle('show', shouldShow);
 		}
 		button.addEventListener('click', () => {
-			window.pathless?.togglePanel();
+			window.pathless?.toggleKeyboard();
 			updateVisibility();
 		});
 		updateVisibility();
