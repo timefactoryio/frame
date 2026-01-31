@@ -3,20 +3,19 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 40%;
+		width: 100%;
 		height: 100%;
-		padding: 0.1em;
 	}
 	.scale {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		grid-auto-rows: 1fr;
+		grid-template-rows: repeat(4, 1fr);
 		gap: 0.3em;
-		padding: 0.2em 2em 0.5em;
+		padding: 0.2em;
 		box-sizing: border-box;
 		font-size: 1.2em;
+		height: 35vh;
 		width: 100%;
-		height: 100%;
 	}
 	.key {
 		display: flex;
@@ -42,6 +41,9 @@
 	}
 	.key[data-key='tab'].hidden {
 		display: none;
+	}
+	.scale:has(.key[data-key='tab'].hidden) {
+		grid-template-rows: repeat(3, 1fr);
 	}
 	.key[data-key='q'] {
 		border-color: red;
@@ -69,64 +71,68 @@
 		font-size: 0.85em;
 	}
 	.key .content svg {
-		max-width: 100%;
-		max-height: 100%;
+		max-width: 95%;
+		max-height: 95%;
 	}
 </style>
 
 <div class="keyboard">
-	<div class="scale"></div>
+	<div class="scale">
+		<div class="key hidden" data-key="tab"><div class="content"></div></div>
+		<div class="key" data-key="1"><div class="content"></div></div>
+		<div class="key" data-key="2"><div class="content"></div></div>
+		<div class="key" data-key="3"><div class="content"></div></div>
+		<div class="key" data-key="q"><div class="content"></div></div>
+		<div class="key" data-key="w"><div class="content"></div></div>
+		<div class="key" data-key="e"><div class="content"></div></div>
+		<div class="key" data-key="a"><div class="content"></div></div>
+		<div class="key" data-key="s"><div class="content"></div></div>
+		<div class="key" data-key="d"><div class="content"></div></div>
+	</div>
 </div>
 
 <script>
 	if (!window.Keyboard) {
 		class Keyboard {
 			static KEYS = ['tab', '1', '2', '3', 'q', 'w', 'e', 'a', 's', 'd'];
-
 			constructor(u) {
 				this.u = u;
 				this.els = {};
-				this.visible = false;
-				this.keyboard = document.querySelector('.keyboard');
-				this.scale = document.querySelector('.scale');
-				this.build();
+				this.el = document.querySelector('.keyboard');
+
+				for (const k of Keyboard.KEYS) {
+					const key = document.querySelector(`.key[data-key="${k}"]`);
+					if (!key) continue;
+					const content = key.querySelector('.content');
+					key.onmousedown = () => this.press(k);
+					key.onmouseup = () => this.release(k);
+					key.onmouseleave = () => this.release(k);
+					key.onclick = () => this.u.keybinds.get(k)?.fx?.();
+					this.els[k] = { key, content };
+				}
 				this.render();
 			}
 
-			get el() {
-				return this.keyboard;
-			}
-
-			build() {
-				const frag = document.createDocumentFragment();
-				for (const k of Keyboard.KEYS) {
-					const el = document.createElement('div');
-					el.className = 'key';
-					el.dataset.key = k;
-					el.innerHTML = '<div class="content"></div>';
-					el.onclick = () => this.u.keybinds.get(k)?.fx?.();
-					this.els[k] = { key: el, content: el.firstChild };
-					frag.appendChild(el);
+			toggleTab() {
+				if (this.els.tab) {
+					this.els.tab.key.classList.toggle('hidden');
 				}
-				this.scale.appendChild(frag);
 			}
 
 			render() {
 				const { layouts, layout, keybinds, focused } = this.u;
 				if (!layouts) return;
-
-				const showTab = layout[0] === 1 || layout[0] === 2;
-				this.els['tab'].key.classList.toggle('hidden', !showTab);
-				this.scale.style.gridTemplateRows = showTab
-					? 'repeat(4, 1fr)'
-					: 'repeat(3, 1fr)';
+				if (this.els.tab) {
+					const showTab = layout[0] === 1 || layout[0] === 2;
+					this.els.tab.key.classList.toggle('hidden', !showTab);
+				}
 
 				for (const k of Keyboard.KEYS) {
+					if (!this.els[k]) continue;
 					const { content } = this.els[k];
 					const n = parseInt(k);
 
 					if (k === 'tab') {
-						if (!showTab) continue;
 						const l = layouts[layout[0]];
 						const idx =
 							layout[0] === 0
@@ -153,6 +159,7 @@
 			press(k) {
 				this.els[k]?.key.classList.add('pressed');
 			}
+
 			release(k) {
 				this.els[k]?.key.classList.remove('pressed');
 			}

@@ -66,7 +66,7 @@
 		function updateVisibility() {
 			const u = window.pathless;
 			const shouldShow =
-				!u?.keyboardVisible &&
+				u?.space[3].visible === false &&
 				u?.focused === 0 &&
 				u?.space[0].index === 0 &&
 				u?.layout[0] === 0;
