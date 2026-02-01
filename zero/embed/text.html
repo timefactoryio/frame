@@ -131,23 +131,39 @@
 </style>
 <script>
 	(function () {
+		const scrollKey = 'scroll';
 		const f = frame();
-		const speed = 30;
 
-		f.scrollTop = pathless.read().scroll || 0;
+		f.scrollTop = pathless.read()[scrollKey] || 0;
 		f.addEventListener('scroll', () =>
-			pathless.write('scroll', f.scrollTop),
+			pathless.write(scrollKey, f.scrollTop),
 		);
 
-		function scroll(key, dir) {
-			(function loop() {
-				if (!pathless.keybinds.get(key)?.pressed) return;
-				f.scrollBy({ top: speed * dir });
-				requestAnimationFrame(loop);
-			})();
+		const speed = 30;
+		let direction = 0;
+
+		function animate() {
+			const bind =
+				direction === -1
+					? pathless.keybinds.get('w')
+					: pathless.keybinds.get('s');
+
+			if (!bind?.pressed) {
+				direction = 0;
+				return;
+			}
+			f.scrollBy({ top: speed * direction });
+			requestAnimationFrame(animate);
 		}
 
-		onKey('w', () => scroll('w', -1), '↑');
-		onKey('s', () => scroll('s', 1), '↓');
+		function scroll(dir) {
+			if (direction === 0) {
+				direction = dir;
+				animate();
+			}
+		}
+
+		onKey('w', () => scroll(-1), '↑');
+		onKey('s', () => scroll(1), '↓');
 	})();
 </script>
