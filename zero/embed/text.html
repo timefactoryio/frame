@@ -132,7 +132,7 @@
 <script>
 	(function () {
 		const f = frame();
-		const speed = 500;
+		const speed = 30;
 
 		f.scrollTop = pathless.read().scroll || 0;
 		f.addEventListener('scroll', () =>
@@ -140,14 +140,11 @@
 		);
 
 		function scroll(key, dir) {
-			let last = performance.now();
-			(function loop(now) {
+			(function loop() {
 				if (!pathless.keybinds.get(key)?.pressed) return;
-				const delta = (now - last) / 1000;
-				last = now;
-				f.scrollBy({ top: speed * dir * delta });
+				f.scrollBy({ top: speed * dir });
 				requestAnimationFrame(loop);
-			})(last);
+			})();
 		}
 
 		onKey('w', () => scroll('w', -1), '↑');
