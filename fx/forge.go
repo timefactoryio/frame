@@ -63,6 +63,13 @@ func (f *forge) Builder(class string, elements ...*One) *One {
 	return &result
 }
 
+func (f *forge) Frames(frame ...*One) []*One {
+	if len(frame) > 0 && frame[0] != nil {
+		f.frames = append(f.frames, frame[0])
+	}
+	return f.frames
+}
+
 func (f *forge) consolidateAssets(html string) string {
 	styleRe := regexp.MustCompile(`(?s)<style>(.*?)</style>`)
 	styleMatches := styleRe.FindAllStringSubmatch(html, -1)
@@ -89,11 +96,4 @@ func (f *forge) consolidateAssets(html string) string {
 		}
 	}
 	return html
-}
-
-func (f *forge) Frames(frame ...*One) []*One {
-	if len(frame) > 0 && frame[0] != nil {
-		f.frames = append(f.frames, frame[0])
-	}
-	return f.frames
 }

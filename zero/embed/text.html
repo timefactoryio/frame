@@ -131,41 +131,26 @@
 </style>
 <script>
 	(function () {
-		const scrollKey = 'scroll';
 		const f = frame();
+		const speed = 500;
 
-		f.scrollTop = pathless.read()[scrollKey] || 0;
+		f.scrollTop = pathless.read().scroll || 0;
 		f.addEventListener('scroll', () =>
-			pathless.write(scrollKey, f.scrollTop),
+			pathless.write('scroll', f.scrollTop),
 		);
 
-		let speed = 0;
-		let animating = false;
-
-		function animate() {
-			if (speed === 0) {
-				animating = false;
-				return;
-			}
-			f.scrollBy({ top: speed });
-			requestAnimationFrame(animate);
+		function scroll(key, dir) {
+			let last = performance.now();
+			(function loop(now) {
+				if (!pathless.keybinds.get(key)?.pressed) return;
+				const delta = (now - last) / 1000;
+				last = now;
+				f.scrollBy({ top: speed * dir * delta });
+				requestAnimationFrame(loop);
+			})(last);
 		}
 
-		function setSpeed(s) {
-			speed = s;
-			if (!animating) {
-				animating = true;
-				animate();
-			}
-		}
-
-		window.addEventListener('keyup', (e) => {
-			if (['w', 's'].includes(e.key.toLowerCase())) {
-				speed = 0;
-			}
-		});
-
-		onKey('w', () => setSpeed(-30), '↑');
-		onKey('s', () => setSpeed(30), '↓');
+		onKey('w', () => scroll('w', -1), '↑');
+		onKey('s', () => scroll('s', 1), '↓');
 	})();
 </script>
