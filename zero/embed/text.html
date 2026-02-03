@@ -132,18 +132,25 @@
 <script>
 	(function () {
 		const scrollKey = 'scroll';
-		frame().scrollTop = pathless.read()[scrollKey] || 0;
-		frame().addEventListener('scroll', () =>
-			pathless.write(scrollKey, frame().scrollTop),
-		);
+		const f = frame();
+		const max = () => f.scrollHeight - f.clientHeight;
+
+		const saved = pathless.read()[scrollKey];
+		if (saved != null) f.scrollTop = saved * max();
+
+		f.addEventListener('scroll', () => {
+			const m = max();
+			pathless.write(scrollKey, m ? f.scrollTop / m : 0);
+		});
 
 		function animate() {
 			const w = pathless.keybinds.get('w')?.pressed;
 			const s = pathless.keybinds.get('s')?.pressed;
 			if (!w && !s) return;
-			frame().scrollBy({ top: window.innerHeight * 0.02 * (s ? 1 : -1) });
+			f.scrollBy({ top: window.innerHeight * 0.02 * (s ? 1 : -1) });
 			requestAnimationFrame(animate);
 		}
+
 		onKey('w', animate, '↑');
 		onKey('s', animate, '↓');
 	})();
