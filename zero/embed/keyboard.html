@@ -12,7 +12,6 @@
 		grid-template-rows: repeat(4, 1fr);
 		gap: 0.3em;
 		padding: 0.2em;
-		box-sizing: border-box;
 		font-size: 1.2em;
 		height: 35vh;
 		width: 100%;
@@ -24,17 +23,14 @@
 		border-radius: 3px;
 		overflow: hidden;
 		cursor: pointer;
-		user-select: none;
 		padding-top: 0.1em;
 		font-size: 1.2em;
 		color: #aaa;
-		min-height: 0;
 	}
 	.key::before {
 		content: attr(data-key);
 		text-align: center;
 		height: 1.2em;
-		flex-shrink: 0;
 	}
 	.key[data-key='tab'] {
 		grid-column: 1 / -1;
@@ -54,7 +50,7 @@
 	.key.pressed {
 		border-color: white;
 	}
-	.key .content {
+	.content {
 		flex: 1;
 		display: flex;
 		align-items: center;
@@ -64,106 +60,83 @@
 		padding: 0.1em;
 		overflow: hidden;
 		color: #fff;
-		min-height: 0;
 	}
 	.key[data-key='q'] .content,
 	.key[data-key='e'] .content {
 		font-size: 0.85em;
 	}
-	.key .content svg {
+	.content svg {
 		max-width: 95%;
 		max-height: 95%;
 	}
 </style>
 
-<div class="keyboard">
-	<div class="scale">
-		<div class="key hidden" data-key="tab"><div class="content"></div></div>
-		<div class="key" data-key="1"><div class="content"></div></div>
-		<div class="key" data-key="2"><div class="content"></div></div>
-		<div class="key" data-key="3"><div class="content"></div></div>
-		<div class="key" data-key="q"><div class="content"></div></div>
-		<div class="key" data-key="w"><div class="content"></div></div>
-		<div class="key" data-key="e"><div class="content"></div></div>
-		<div class="key" data-key="a"><div class="content"></div></div>
-		<div class="key" data-key="s"><div class="content"></div></div>
-		<div class="key" data-key="d"><div class="content"></div></div>
-	</div>
-</div>
+<div class="keyboard"><div class="scale"></div></div>
 
 <script>
-	if (!window.Keyboard) {
-		class Keyboard {
-			static KEYS = ['tab', '1', '2', '3', 'q', 'w', 'e', 'a', 's', 'd'];
-			constructor(u) {
-				this.u = u;
-				this.els = {};
-				this.el = document.querySelector('.keyboard');
+	(function (u) {
+		if (!u || u.kb) return;
 
-				for (const k of Keyboard.KEYS) {
-					const key = document.querySelector(`.key[data-key="${k}"]`);
-					if (!key) continue;
-					const content = key.querySelector('.content');
-					key.onmousedown = () => this.press(k);
-					key.onmouseup = () => this.release(k);
-					key.onmouseleave = () => this.release(k);
-					key.onclick = () => this.u.keybinds.get(k)?.fx?.();
-					this.els[k] = { key, content };
-				}
-				this.render();
-			}
+		const KEYS = ['tab', 1, 2, 3, 'q', 'w', 'e', 'a', 's', 'd'];
+		const scale = document.querySelector('.scale');
+		const els = {};
 
-			toggleTab() {
-				if (this.els.tab) {
-					this.els.tab.key.classList.toggle('hidden');
-				}
-			}
+		scale.innerHTML = KEYS.map(
+			(k) =>
+				`<div class="key${k === 'tab' ? ' hidden' : ''}" data-key="${k}"><div class="content"></div></div>`,
+		).join('');
 
+		scale.querySelectorAll('.key').forEach((key) => {
+			const k = key.dataset.key;
+			els[k] = { key, content: key.firstElementChild };
+			key.onpointerdown = () => {
+				key.classList.add('pressed');
+				const bind = u.keybinds.get(k);
+				if (bind) bind.pressed = true;
+			};
+			key.onpointerup = key.onpointerleave = () => {
+				key.classList.remove('pressed');
+				const bind = u.keybinds.get(k);
+				if (bind) bind.pressed = false;
+			};
+			key.onclick = () => u.keybinds.get(k)?.fx?.();
+		});
+
+		u.kb = {
+			press: (k) => els[k]?.key.classList.add('pressed'),
+			release: (k) => els[k]?.key.classList.remove('pressed'),
 			render() {
-				const { layouts, layout, keybinds, focused } = this.u;
-				if (!layouts) return;
-				if (this.els.tab) {
-					const showTab = layout[0] === 1 || layout[0] === 2;
-					this.els.tab.key.classList.toggle('hidden', !showTab);
-				}
+				const {
+					layouts,
+					layout: [li, vi],
+					keybinds,
+					focused,
+				} = u;
+				if (!layouts?.length) return;
 
-				for (const k of Keyboard.KEYS) {
-					if (!this.els[k]) continue;
-					const { content } = this.els[k];
-					const n = parseInt(k);
+				const current = layouts[li];
+				els.tab.key.classList.toggle('hidden', !li);
+				if (li)
+					els.tab.content.innerHTML =
+						current.focus?.[vi * current.visible + focused] ?? '';
 
-					if (k === 'tab') {
-						const l = layouts[layout[0]];
-						const idx =
-							layout[0] === 0
-								? 0
-								: layout[1] * l.visible + focused;
-						content.innerHTML = l?.focus?.[idx] ?? '';
-					} else if (n) {
-						const l = layouts[n - 1];
-						if (!l) {
-							content.innerHTML = '';
-							continue;
-						}
-						const idx =
-							n === 1 || layout[0] !== n - 1
-								? 0
-								: (layout[1] + 1) % l.variants.length;
-						content.innerHTML = l.variants[idx].svg;
-					} else {
-						content.textContent = keybinds.get(k)?.desc ?? '';
-					}
-				}
-			}
+				[1, 2, 3].forEach((n) => {
+					const l = layouts[n - 1];
+					const idx =
+						n === 1 || li !== n - 1
+							? 0
+							: (vi + 1) % l.variants.length;
+					els[n].content.innerHTML = l?.variants[idx].svg ?? '';
+				});
 
-			press(k) {
-				this.els[k]?.key.classList.add('pressed');
-			}
+				['q', 'w', 'e', 'a', 's', 'd'].forEach(
+					(k) =>
+						(els[k].content.textContent =
+							keybinds.get(k)?.desc ?? ''),
+				);
+			},
+		};
 
-			release(k) {
-				this.els[k]?.key.classList.remove('pressed');
-			}
-		}
-		window.Keyboard = Keyboard;
-	}
+		u.kb.render();
+	})(pathless);
 </script>
