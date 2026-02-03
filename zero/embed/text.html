@@ -131,22 +131,19 @@
 </style>
 <script>
 	(function () {
-		const f = frame();
 		const scrollKey = 'scroll';
-
-		f.scrollTop = pathless.read()[scrollKey] || 0;
-		f.addEventListener('scroll', () =>
-			pathless.write(scrollKey, f.scrollTop),
+		frame().scrollTop = pathless.read()[scrollKey] || 0;
+		frame().addEventListener('scroll', () =>
+			pathless.write(scrollKey, frame().scrollTop),
 		);
 
 		function animate() {
 			const w = pathless.keybinds.get('w')?.pressed;
 			const s = pathless.keybinds.get('s')?.pressed;
 			if (!w && !s) return;
-			f.scrollBy({ top: window.innerHeight * 0.02 * (s ? 1 : -1) });
+			frame().scrollBy({ top: window.innerHeight * 0.02 * (s ? 1 : -1) });
 			requestAnimationFrame(animate);
 		}
-
 		onKey('w', animate, '↑');
 		onKey('s', animate, '↓');
 	})();
