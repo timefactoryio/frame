@@ -131,16 +131,19 @@
 </style>
 <script>
 	(function () {
-		const scrollKey = 'scroll';
 		const f = frame();
 		const max = () => f.scrollHeight - f.clientHeight;
+		const saved = pathless.read().scroll;
 
-		const saved = pathless.read()[scrollKey];
-		if (saved != null) f.scrollTop = saved * max();
+		if (saved != null) {
+			requestAnimationFrame(() => {
+				f.scrollTop = saved * max();
+			});
+		}
 
 		f.addEventListener('scroll', () => {
 			const m = max();
-			pathless.write(scrollKey, m ? f.scrollTop / m : 0);
+			pathless.write('scroll', m ? f.scrollTop / m : 0);
 		});
 
 		function animate() {
