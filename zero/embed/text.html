@@ -131,26 +131,17 @@
 </style>
 <script>
 	(function () {
-		const f = frame();
+		const f = document.querySelector('.text');
 		const max = () => f.scrollHeight - f.clientHeight;
-		const saved = pathless.read().scroll;
+		const keys = pathless.keybinds;
 
-		if (saved != null) {
-			requestAnimationFrame(() => {
-				f.scrollTop = saved * max();
-			});
-		}
-
-		f.addEventListener('scroll', () => {
-			const m = max();
-			pathless.write('scroll', m ? f.scrollTop / m : 0);
-		});
+		f.scrollTop = (pathless.read().scroll ?? 0) * max();
+		f.onscroll = () => pathless.write('scroll', f.scrollTop / (max() || 1));
 
 		function animate() {
-			const w = pathless.keybinds.get('w')?.pressed;
-			const s = pathless.keybinds.get('s')?.pressed;
-			if (!w && !s) return;
-			f.scrollBy({ top: window.innerHeight * 0.02 * (s ? 1 : -1) });
+			const dir = keys.get('s')?.pressed - keys.get('w')?.pressed;
+			if (!dir) return;
+			f.scrollBy({ top: innerHeight * 0.02 * dir });
 			requestAnimationFrame(animate);
 		}
 
