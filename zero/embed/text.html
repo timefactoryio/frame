@@ -134,18 +134,28 @@
 		const f = frame();
 		const scrollKey = 'scroll';
 		const speed = () => window.innerHeight * 0.03;
+		let running = false;
 
 		f.scrollTop = pathless.read()[scrollKey] || 0;
 		f.addEventListener('scroll', () =>
 			pathless.write(scrollKey, f.scrollTop),
 		);
 
-		function scroll() {
+		function animate() {
 			const w = pathless.keybinds.get('w')?.pressed;
 			const s = pathless.keybinds.get('s')?.pressed;
-			if (!w && !s) return;
+			if (!w && !s) {
+				running = false;
+				return;
+			}
 			f.scrollBy({ top: speed() * (s ? 1 : -1) });
-			requestAnimationFrame(scroll);
+			requestAnimationFrame(animate);
+		}
+
+		function scroll() {
+			if (running) return;
+			running = true;
+			animate();
 		}
 
 		onKey('w', scroll, '↑');
