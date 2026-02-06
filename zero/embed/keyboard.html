@@ -47,7 +47,7 @@
 	.key[data-key='e'] {
 		border-color: blue;
 	}
-	.key.pressed {
+	.key.held {
 		border-color: white;
 	}
 	.content {
@@ -89,21 +89,20 @@
 		scale.querySelectorAll('.key').forEach((key) => {
 			const k = key.dataset.key;
 			els[k] = { key, content: key.firstElementChild };
-			key.onpointerdown = () => u.handleKey(k, true);
-			key.onpointerup = key.onpointerleave = () => u.handleKey(k, false);
+			key.onpointerdown = () => u.key(k, true);
+			key.onpointerup = key.onpointerleave = () => u.key(k, false);
 		});
 
 		u.kb = {
 			update(k) {
-				const bind = u.keybinds.get(k);
-				els[k]?.key.classList.toggle('pressed', !!bind?.pressed);
-				this.render();
+				const bind = u.keys.get(k);
+				els[k]?.key.classList.toggle('held', !!bind?.held);
 			},
 			render() {
 				const {
 					layouts,
 					layout: [li, vi],
-					keybinds,
+					keys,
 					focused,
 				} = u;
 				if (!layouts?.length) return;
@@ -125,8 +124,7 @@
 
 				['q', 'w', 'e', 'a', 's', 'd'].forEach(
 					(k) =>
-						(els[k].content.textContent =
-							keybinds.get(k)?.desc ?? ''),
+						(els[k].content.textContent = keys.get(k)?.desc ?? ''),
 				);
 			},
 		};
