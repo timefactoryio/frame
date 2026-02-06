@@ -38,7 +38,7 @@
 			if (slides.length) show(index);
 		});
 
-		onKey('a', () => show(index - 1), '←');
-		onKey('d', () => show(index + 1), '→');
+		onKey('a', () => show(index - 1), { desc: '←' });
+		onKey('d', () => show(index + 1), { desc: '→' });
 	})();
 </script>

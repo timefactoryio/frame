@@ -133,19 +133,25 @@
 	(function () {
 		const f = space().querySelector('.text');
 		const max = () => f.scrollHeight - f.clientHeight;
-		const keys = pathless.keybinds;
 
 		f.scrollTop = (pathless.read().scroll ?? 0) * max();
 		f.onscroll = () => pathless.write('scroll', f.scrollTop / (max() || 1));
 
-		function animate() {
-			const dir = keys.get('s')?.pressed - keys.get('w')?.pressed;
-			if (!dir) return;
-			f.scrollBy({ top: innerHeight * 0.02 * dir });
-			requestAnimationFrame(animate);
+		function hold(dir) {
+			let id;
+			function step() {
+				f.scrollBy({ top: innerHeight * 0.02 * dir });
+				id = requestAnimationFrame(step);
+			}
+			return {
+				down: step,
+				up: () => cancelAnimationFrame(id),
+			};
 		}
 
-		onKey('w', animate, '↑');
-		onKey('s', animate, '↓');
+		const w = hold(-1);
+		const s = hold(1);
+		onKey('w', w.down, { up: w.up, desc: '↑' });
+		onKey('s', s.down, { up: s.up, desc: '↓' });
 	})();
 </script>

@@ -89,22 +89,16 @@
 		scale.querySelectorAll('.key').forEach((key) => {
 			const k = key.dataset.key;
 			els[k] = { key, content: key.firstElementChild };
-			key.onpointerdown = () => {
-				key.classList.add('pressed');
-				const bind = u.keybinds.get(k);
-				if (bind) bind.pressed = true;
-			};
-			key.onpointerup = key.onpointerleave = () => {
-				key.classList.remove('pressed');
-				const bind = u.keybinds.get(k);
-				if (bind) bind.pressed = false;
-			};
-			key.onclick = () => u.keybinds.get(k)?.fx?.();
+			key.onpointerdown = () => u.handleKey(k, true);
+			key.onpointerup = key.onpointerleave = () => u.handleKey(k, false);
 		});
 
 		u.kb = {
-			press: (k) => els[k]?.key.classList.add('pressed'),
-			release: (k) => els[k]?.key.classList.remove('pressed'),
+			update(k) {
+				const bind = u.keybinds.get(k);
+				els[k]?.key.classList.toggle('pressed', !!bind?.pressed);
+				this.render();
+			},
 			render() {
 				const {
 					layouts,
