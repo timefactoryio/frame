@@ -1,6 +1,6 @@
 module github.com/timefactoryio/frame
 
-go 1.25.7
+go 1.26.0
 
 require (
 	github.com/litao91/goldmark-mathjax v0.0.0-20210217064022-a43cf739a50f
