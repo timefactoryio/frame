@@ -135,8 +135,10 @@
 		const max = () => f.scrollHeight - f.clientHeight;
 
 		f.scrollTop = (pathless.read().scroll ?? 0) * max();
-		f.onscroll = () => pathless.write('scroll', f.scrollTop / (max() || 1));
-
+		f.onscroll = () => {
+			const m = max();
+			if (m > 0) pathless.write('scroll', f.scrollTop / m);
+		};
 		function hold(dir) {
 			let id;
 			function step() {

@@ -126,6 +126,10 @@
 					(k) =>
 						(els[k].content.textContent = keys.get(k)?.desc ?? ''),
 				);
+				KEYS.forEach((k) => {
+					const s = String(k);
+					els[s]?.key.classList.toggle('held', !!keys.get(s)?.held);
+				});
 			},
 		};
 
