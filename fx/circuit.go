@@ -3,6 +3,7 @@ package fx
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/binary"
 	"encoding/json"
 	"io"
 	"mime"
@@ -29,9 +30,10 @@ type circuit struct {
 }
 
 type Value struct {
-	Name string
-	Type string
-	Data []byte
+	Name string `json:"Name"`
+	Type string `json:"Type"`
+	Size int    `json:"Size"`
+	Data []byte `json:"-"`
 }
 
 func NewCircuit() Circuit {
@@ -85,7 +87,6 @@ func (c *circuit) Compress(data []byte) []byte {
 	return buf.Bytes()
 }
 
-// Read reads a single file and returns a Value struct with its content, content type, and filename without extension
 func (c *circuit) Read(path, prefix string) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -102,25 +103,29 @@ func (c *circuit) Read(path, prefix string) {
 	v := &Value{
 		Name: name,
 		Type: content,
+		Size: len(data),
 		Data: data,
 	}
 
 	c.value[prefix] = []*Value{v}
-
-	compressed := c.Compress(v.Data)
-	c.Router().HandleFunc("/"+prefix+"/"+name, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", v.Type)
-		w.Header().Set("Content-Encoding", "gzip")
-		w.Write(compressed)
-	})
+	c.registerRoute(prefix+"/"+name, v.Type, c.Compress(v.Data))
 }
 
 func (c *circuit) Reader(path string) string {
 	dirName, values, order := c.loadFiles(path)
 	c.sortFiles(values, order)
 	c.value[dirName] = values
-	jsonData, _ := json.Marshal(values)
-	c.registerRoute(dirName, c.Compress(jsonData))
+
+	manifestJSON, _ := json.Marshal(values)
+
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.BigEndian, uint32(len(manifestJSON)))
+	buf.Write(manifestJSON)
+	for _, v := range values {
+		buf.Write(v.Data)
+	}
+
+	c.registerRoute(dirName, "application/octet-stream", c.Compress(buf.Bytes()))
 	return dirName
 }
 
@@ -149,7 +154,7 @@ func (c *circuit) loadFiles(path string) (string, []*Value, []string) {
 		if ct == "" {
 			ct = http.DetectContentType(data)
 		}
-		values = append(values, &Value{Name: base[:len(base)-len(ext)], Type: ct, Data: data})
+		values = append(values, &Value{Name: base[:len(base)-len(ext)], Type: ct, Size: len(data), Data: data})
 		return nil
 	})
 
@@ -180,10 +185,10 @@ func (c *circuit) sortFiles(values []*Value, order []string) {
 	})
 }
 
-func (c *circuit) registerRoute(dirName string, jsonData []byte) {
-	c.Router().HandleFunc("/"+dirName, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+func (c *circuit) registerRoute(path, contentType string, data []byte) {
+	c.Router().HandleFunc("/"+path, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Content-Encoding", "gzip")
-		w.Write(jsonData)
+		w.Write(data)
 	})
 }
