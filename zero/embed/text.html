@@ -2,13 +2,12 @@
 	.text {
 		display: flex;
 		flex-direction: column;
-		overflow-y: auto;
+		overflow: hidden auto;
 		height: 100%;
 		padding: max(2vw, 1.5em);
-		max-width: 70vw;
-		margin: 0 auto;
-		box-sizing: border-box;
+		max-width: min(70vw, 100%);
 		color: #f3f3f3;
+		overflow-wrap: break-word;
 	}
 	.text img {
 		max-width: 90%;
@@ -83,7 +82,7 @@
 		margin-right: auto;
 		display: flex;
 		justify-content: center;
-		max-width: 90vw;
+		max-width: 100%;
 		width: fit-content;
 	}
 	.text pre code {
@@ -96,7 +95,7 @@
 		font-size: 1em;
 		white-space: pre;
 		overflow-x: auto;
-		max-width: 100vw;
+		max-width: 100%;
 	}
 	.text table {
 		border-collapse: separate;
@@ -134,20 +133,36 @@
 		const f = space().querySelector('.text');
 		const max = () => f.scrollHeight - f.clientHeight;
 
-		f.scrollTop = (pathless.read().scroll ?? 0) * max();
-		f.onscroll = () => {
-			const m = max();
-			if (m > 0) pathless.write('scroll', f.scrollTop / m);
-		};
+		requestAnimationFrame(() => {
+			f.scrollTop = (pathless.read().scroll ?? 0) * max();
+		});
+
+		f.addEventListener(
+			'scroll',
+			() => {
+				const m = max();
+				if (m > 0) pathless.write('scroll', f.scrollTop / m);
+			},
+			{ passive: true },
+		);
+
 		function hold(dir) {
-			let id;
-			function step() {
-				f.scrollBy({ top: innerHeight * 0.02 * dir });
+			let id, prev;
+			const speed = 1.5;
+			function step(now) {
+				if (prev) f.scrollBy({ top: (now - prev) * speed * dir });
+				prev = now;
 				id = requestAnimationFrame(step);
 			}
 			return {
-				down: step,
-				up: () => cancelAnimationFrame(id),
+				down: () => {
+					prev = 0;
+					id = requestAnimationFrame(step);
+				},
+				up: () => {
+					cancelAnimationFrame(id);
+					prev = 0;
+				},
 			};
 		}
 
