@@ -1,5 +1,6 @@
 <style>
 	.text {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden auto;
@@ -7,7 +8,6 @@
 		padding: max(2vw, 1.5em);
 		max-width: min(70vw, 100%);
 		color: #f3f3f3;
-		overflow-wrap: break-word;
 	}
 	.text img {
 		max-width: 90%;
@@ -131,20 +131,32 @@
 <script>
 	(function () {
 		const f = space().querySelector('.text');
-		const max = () => f.scrollHeight - f.clientHeight;
+		function snap() {
+			const top = f.scrollTop;
+			for (let i = 0; i < f.children.length; i++) {
+				const child = f.children[i];
+				if (child.offsetTop + child.offsetHeight > top) {
+					return {
+						i,
+						r: (top - child.offsetTop) / (child.offsetHeight || 1),
+					};
+				}
+			}
+			return { i: 0, r: 0 };
+		}
 
 		requestAnimationFrame(() => {
-			f.scrollTop = (pathless.read().scroll ?? 0) * max();
+			const s = pathless.read().scroll;
+			if (s && s.i != null) {
+				const child = f.children[s.i];
+				if (child)
+					f.scrollTop = child.offsetTop + s.r * child.offsetHeight;
+			}
 		});
 
-		f.addEventListener(
-			'scroll',
-			() => {
-				const m = max();
-				if (m > 0) pathless.write('scroll', f.scrollTop / m);
-			},
-			{ passive: true },
-		);
+		f.addEventListener('scroll', () => pathless.write('scroll', snap()), {
+			passive: true,
+		});
 
 		function hold(dir) {
 			let id, prev;
