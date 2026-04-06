@@ -131,26 +131,23 @@
 <script>
 	(function () {
 		const f = space().querySelector('.text');
+		const c = f.children;
+
 		function snap() {
-			const top = f.scrollTop;
-			for (let i = 0; i < f.children.length; i++) {
-				const child = f.children[i];
-				if (child.offsetTop + child.offsetHeight > top) {
-					return {
-						i,
-						r: (top - child.offsetTop) / (child.offsetHeight || 1),
-					};
-				}
+			const t = f.scrollTop;
+			for (let i = 0; i < c.length; i++) {
+				const o = c[i].offsetTop,
+					h = c[i].offsetHeight;
+				if (o + h > t) return { i, r: (t - o) / (h || 1) };
 			}
 			return { i: 0, r: 0 };
 		}
 
 		requestAnimationFrame(() => {
 			const s = pathless.read().scroll;
-			if (s && s.i != null) {
-				const child = f.children[s.i];
-				if (child)
-					f.scrollTop = child.offsetTop + s.r * child.offsetHeight;
+			if (s?.i != null) {
+				const el = c[s.i];
+				if (el) f.scrollTop = el.offsetTop + s.r * el.offsetHeight;
 			}
 		});
 
@@ -158,11 +155,10 @@
 			passive: true,
 		});
 
-		function hold(dir) {
+		function hold(v) {
 			let id, prev;
-			const speed = 1.5;
 			function step(now) {
-				if (prev) f.scrollBy({ top: (now - prev) * speed * dir });
+				if (prev) f.scrollBy({ top: (now - prev) * v });
 				prev = now;
 				id = requestAnimationFrame(step);
 			}
@@ -178,8 +174,8 @@
 			};
 		}
 
-		const w = hold(-1);
-		const s = hold(1);
+		const w = hold(-1.5),
+			s = hold(1.5);
 		onKey('w', w.down, { up: w.up, desc: '↑' });
 		onKey('s', s.down, { up: s.up, desc: '↓' });
 	})();
