@@ -3,7 +3,6 @@ package fx
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"github.com/timefactoryio/frame/zero"
 )
@@ -16,7 +15,7 @@ type Fx struct {
 	Hello []byte
 }
 
-type universe struct {
+type hello struct {
 	Frames   []string        `json:"frames"`
 	Keyboard string          `json:"keyboard"`
 	Layouts  json.RawMessage `json:"layouts"`
@@ -39,7 +38,7 @@ func (fx *Fx) BuildHello() {
 		}
 	}
 
-	u := &universe{
+	u := &hello{
 		Frames:   frames,
 		Keyboard: fx.Keyboard,
 		Layouts:  json.RawMessage(fx.Layouts),
@@ -48,32 +47,6 @@ func (fx *Fx) BuildHello() {
 	if jsonData, err := json.Marshal(u); err == nil {
 		fx.Hello = fx.Compress(jsonData)
 	}
-}
-
-func (fx *Fx) BuildHelloTest(keyboardPath string) error {
-	frames := make([]string, 0, len(fx.Frames()))
-	for _, frame := range fx.Frames() {
-		if frame != nil {
-			frames = append(frames, string(*frame))
-		}
-	}
-
-	kb, err := os.ReadFile(keyboardPath)
-	if err != nil {
-		return err
-	}
-
-	u := &universe{
-		Frames:   frames,
-		Layouts:  json.RawMessage(fx.Layouts),
-		Keyboard: string(kb),
-	}
-
-	if jsonData, err := json.Marshal(u); err == nil {
-		fx.Hello = fx.Compress(jsonData)
-	}
-
-	return nil
 }
 
 func (fx *Fx) HandleHello(w http.ResponseWriter, r *http.Request) {

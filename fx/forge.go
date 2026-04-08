@@ -10,6 +10,11 @@ import (
 
 type One template.HTML
 
+var (
+	style  = regexp.MustCompile(`(?s)<style>(.*?)</style>`)
+	script = regexp.MustCompile(`(?s)<script>(.*?)</script>`)
+)
+
 func NewForge() Forge {
 	return &forge{
 		frames: []*One{},
@@ -27,38 +32,21 @@ type Forge interface {
 }
 
 func (f *forge) Build(class string, elements ...*One) {
-	var b strings.Builder
-	for _, el := range elements {
-		b.WriteString(string(*el))
-	}
-
-	var htmlOut string
-	if class == "" {
-		htmlOut = b.String()
-	} else {
-		consolidatedContent := b.String()
-		htmlOut = fmt.Sprintf(`<div class="%s">%s</div>`, html.EscapeString(class), consolidatedContent)
-	}
-	cleaned := f.consolidateAssets(htmlOut)
-	result := One(template.HTML(cleaned))
-
-	f.Frames(&result)
+	f.Frames(f.Builder(class, elements...))
 }
 
 func (f *forge) Builder(class string, elements ...*One) *One {
 	var b strings.Builder
+	if class != "" {
+		fmt.Fprintf(&b, `<div class="%s">`, html.EscapeString(class))
+	}
 	for _, el := range elements {
 		b.WriteString(string(*el))
 	}
-
-	var htmlOut string
-	if class == "" {
-		htmlOut = b.String()
-	} else {
-		consolidatedContent := b.String()
-		htmlOut = fmt.Sprintf(`<div class="%s">%s</div>`, html.EscapeString(class), consolidatedContent)
+	if class != "" {
+		b.WriteString("</div>")
 	}
-	cleaned := f.consolidateAssets(htmlOut)
+	cleaned := f.consolidateAssets(b.String())
 	result := One(template.HTML(cleaned))
 	return &result
 }
@@ -70,30 +58,22 @@ func (f *forge) Frames(frame ...*One) []*One {
 	return f.frames
 }
 
-func (f *forge) consolidateAssets(html string) string {
-	styleRe := regexp.MustCompile(`(?s)<style>(.*?)</style>`)
-	styleMatches := styleRe.FindAllStringSubmatch(html, -1)
-	var styleBlock string
-	if len(styleMatches) > 1 {
+func (f *forge) consolidateAssets(s string) string {
+	if styleMatches := style.FindAllStringSubmatch(s, -1); len(styleMatches) > 1 {
+		var sb strings.Builder
 		for _, m := range styleMatches {
-			styleBlock += m[1] + "\n"
+			sb.WriteString(m[1])
+			sb.WriteByte('\n')
 		}
-		html = styleRe.ReplaceAllString(html, "")
-		if styleBlock != "" {
-			html = fmt.Sprintf("<style>%s</style>%s", styleBlock, html)
-		}
+		s = fmt.Sprintf("<style>%s</style>%s", sb.String(), style.ReplaceAllString(s, ""))
 	}
-	scriptRe := regexp.MustCompile(`(?s)<script>(.*?)</script>`)
-	scriptMatches := scriptRe.FindAllStringSubmatch(html, -1)
-	var scriptBlock string
-	if len(scriptMatches) > 1 {
+	if scriptMatches := script.FindAllStringSubmatch(s, -1); len(scriptMatches) > 1 {
+		var sb strings.Builder
 		for _, m := range scriptMatches {
-			scriptBlock += m[1] + "\n"
+			sb.WriteString(m[1])
+			sb.WriteByte('\n')
 		}
-		html = scriptRe.ReplaceAllString(html, "")
-		if scriptBlock != "" {
-			html = fmt.Sprintf("%s<script>%s</script>", html, scriptBlock)
-		}
+		s = fmt.Sprintf("%s<script>%s</script>", script.ReplaceAllString(s, ""), sb.String())
 	}
-	return html
+	return s
 }

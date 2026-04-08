@@ -15,10 +15,10 @@ import (
 )
 
 type Element interface {
+	Markdown() *goldmark.Markdown
 	HTML(html string) *One
 	JS(js string) One
 	CSS(css string) One
-	Markdown() *goldmark.Markdown
 	H1(s string) *One
 	H2(s string) *One
 	H3(s string) *One
@@ -43,7 +43,6 @@ type Element interface {
 	Button(label string) *One
 	Code(code string) *One
 	CodeBlock(lang, code string) *One
-
 	Div(class string, children ...*One) *One
 	Link(href, text string) *One
 	LinkedImg(href, src, alt string) *One
@@ -57,6 +56,23 @@ type Element interface {
 	Source(src string) *One
 	Canvas(id string) *One
 	Table(cols uint8, rows uint64, data [][]string) *One
+}
+
+func initGoldmark() *goldmark.Markdown {
+	md := goldmark.New(
+		goldmark.WithExtensions(extension.GFM, math.MathJax),
+		goldmark.WithParserOptions(
+			parser.WithAutoHeadingID(),
+			parser.WithAttribute(),
+			parser.WithBlockParsers(),
+			parser.WithInlineParsers(),
+		),
+		goldmark.WithRendererOptions(
+			h.WithHardWraps(),
+			h.WithXHTML(),
+		),
+	)
+	return &md
 }
 
 // --- element Implementation ---
@@ -142,7 +158,7 @@ func (e *element) CodeBlock(lang, code string) *One {
 
 func (e *element) Div(class string, children ...*One) *One {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`<div class="%s">`, html.EscapeString(class)))
+	fmt.Fprintf(&b, `<div class="%s">`, html.EscapeString(class))
 	for _, child := range children {
 		if child != nil {
 			b.WriteString(string(*child))
@@ -207,11 +223,11 @@ func (e *element) List(items []any, ordered bool) *One {
 		tag = "ol"
 	}
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<%s>", tag))
+	fmt.Fprintf(&b, "<%s>", tag)
 	for _, item := range items {
-		b.WriteString(fmt.Sprintf("<li>%v</li>", html.EscapeString(fmt.Sprintf("%v", item))))
+		fmt.Fprintf(&b, "<li>%v</li>", html.EscapeString(fmt.Sprintf("%v", item)))
 	}
-	b.WriteString(fmt.Sprintf("</%s>", tag))
+	fmt.Fprintf(&b, "</%s>", tag)
 	o := One(template.HTML(b.String()))
 	return &o
 }
@@ -252,28 +268,11 @@ func (e *element) Table(cols uint8, rows uint64, data [][]string) *One {
 	for _, row := range data {
 		b.WriteString("<tr>")
 		for _, cell := range row {
-			b.WriteString(fmt.Sprintf("<td>%s</td>", html.EscapeString(cell)))
+			fmt.Fprintf(&b, "<td>%s</td>", html.EscapeString(cell))
 		}
 		b.WriteString("</tr>")
 	}
 	b.WriteString("</table>")
 	o := One(template.HTML(b.String()))
 	return &o
-}
-
-func initGoldmark() *goldmark.Markdown {
-	md := goldmark.New(
-		goldmark.WithExtensions(extension.GFM, math.MathJax),
-		goldmark.WithParserOptions(
-			parser.WithAutoHeadingID(),
-			parser.WithAttribute(),
-			parser.WithBlockParsers(),
-			parser.WithInlineParsers(),
-		),
-		goldmark.WithRendererOptions(
-			h.WithHardWraps(),
-			h.WithXHTML(),
-		),
-	)
-	return &md
 }
