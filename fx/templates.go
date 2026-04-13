@@ -7,8 +7,8 @@ import (
 )
 
 func (fx *Fx) Home(logo, heading string) {
-	logoEmbed := fx.ToString(logo)
-	if logoEmbed == "" {
+	logoEmbed := fx.ToBytes(logo)
+	if logoEmbed == nil {
 		return
 	}
 
@@ -16,7 +16,7 @@ func (fx *Fx) Home(logo, heading string) {
 
 	var buf strings.Builder
 	if err := tmpl.Execute(&buf, map[string]template.HTML{
-		"LOGO":    template.HTML(logoEmbed),
+		"LOGO":    template.HTML(string(logoEmbed)),
 		"HEADING": template.HTML(heading),
 	}); err != nil {
 		return
@@ -50,7 +50,6 @@ func (fx *Fx) Text(path string) {
 
 func (fx *Fx) Slides(dir string) {
 	prefix := fx.Reader(dir)
-
 	tmpl, err := template.New("slides").Parse(fx.SlidesTemplate)
 	if err != nil {
 		return

@@ -19,7 +19,6 @@ type Circuit interface {
 	Read(path, prefix string)
 	Reader(path string) string
 	ToBytes(input string) []byte
-	ToString(input string) string
 	Compress(data []byte) []byte
 	Value() map[string][]*Value
 }
@@ -30,9 +29,9 @@ type circuit struct {
 }
 
 type Value struct {
-	Name string `json:"Name"`
-	Type string `json:"Type"`
-	Size int    `json:"Size"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Size int    `json:"size"`
 	Data []byte `json:"-"`
 }
 
@@ -71,14 +70,6 @@ func (c *circuit) ToBytes(input string) []byte {
 	return b
 }
 
-func (c *circuit) ToString(input string) string {
-	b := c.ToBytes(input)
-	if b == nil {
-		return ""
-	}
-	return string(b)
-}
-
 func (c *circuit) Compress(data []byte) []byte {
 	var buf bytes.Buffer
 	w := gzip.NewWriter(&buf)
@@ -88,32 +79,16 @@ func (c *circuit) Compress(data []byte) []byte {
 }
 
 func (c *circuit) Read(path, prefix string) {
-	data, err := os.ReadFile(path)
-	if err != nil {
+	v := c.newValue(path)
+	if v == nil {
 		return
 	}
-
-	base := filepath.Base(path)
-	name := base[:len(base)-len(filepath.Ext(base))]
-	content := mime.TypeByExtension(filepath.Ext(path))
-	if content == "" {
-		content = http.DetectContentType(data)
-	}
-
-	v := &Value{
-		Name: name,
-		Type: content,
-		Size: len(data),
-		Data: data,
-	}
-
 	c.value[prefix] = []*Value{v}
-	c.registerRoute(prefix+"/"+name, v.Type, c.Compress(v.Data))
+	c.registerRoute(prefix+"/"+v.Name, v.Type, c.Compress(v.Data))
 }
 
 func (c *circuit) Reader(path string) string {
-	dirName, values, order := c.loadFiles(path)
-	c.sortFiles(values, order)
+	dirName, values := c.loadFiles(path)
 	c.value[dirName] = values
 
 	manifestJSON, _ := json.Marshal(values)
@@ -129,60 +104,63 @@ func (c *circuit) Reader(path string) string {
 	return dirName
 }
 
-func (c *circuit) loadFiles(path string) (string, []*Value, []string) {
+func (c *circuit) newValue(path string) *Value {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	base := filepath.Base(path)
+	ext := filepath.Ext(base)
+	ct := mime.TypeByExtension(ext)
+	if ct == "" {
+		ct = http.DetectContentType(data)
+	}
+	return &Value{Name: base[:len(base)-len(ext)], Type: ct, Size: len(data), Data: data}
+}
+
+func (c *circuit) loadFiles(path string) (string, []*Value) {
 	dirName := filepath.Base(path)
 	var values []*Value
-	var order []string
+	var orderMap map[string]int
+
+	if data, err := os.ReadFile(filepath.Join(path, "sort.json")); err == nil {
+		var order []string
+		if json.Unmarshal(data, &order) == nil {
+			orderMap = make(map[string]int, len(order))
+			for i, name := range order {
+				orderMap[name] = i
+			}
+		}
+	}
 
 	filepath.WalkDir(path, func(p string, d os.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
+		if err != nil || d.IsDir() || filepath.Base(p) == "sort.json" {
 			return err
 		}
-		base := filepath.Base(p)
-		if base == "sort.json" {
-			if data, err := os.ReadFile(p); err == nil {
-				json.Unmarshal(data, &order)
-			}
-			return nil
+		if v := c.newValue(p); v != nil {
+			values = append(values, v)
 		}
-		data, err := os.ReadFile(p)
-		if err != nil {
-			return nil
-		}
-		ext := filepath.Ext(base)
-		ct := mime.TypeByExtension(ext)
-		if ct == "" {
-			ct = http.DetectContentType(data)
-		}
-		values = append(values, &Value{Name: base[:len(base)-len(ext)], Type: ct, Size: len(data), Data: data})
 		return nil
 	})
 
-	return dirName, values, order
-}
+	if len(orderMap) > 0 {
+		sort.Slice(values, func(i, j int) bool {
+			posI, foundI := orderMap[values[i].Name]
+			posJ, foundJ := orderMap[values[j].Name]
+			if foundI && foundJ {
+				return posI < posJ
+			}
+			if foundI {
+				return true
+			}
+			if foundJ {
+				return false
+			}
+			return values[i].Name < values[j].Name
+		})
+	}
 
-func (c *circuit) sortFiles(values []*Value, order []string) {
-	if len(order) == 0 {
-		return
-	}
-	orderMap := make(map[string]int, len(order))
-	for i, name := range order {
-		orderMap[name] = i
-	}
-	sort.Slice(values, func(i, j int) bool {
-		posI, foundI := orderMap[values[i].Name]
-		posJ, foundJ := orderMap[values[j].Name]
-		if foundI && foundJ {
-			return posI < posJ
-		}
-		if foundI {
-			return true
-		}
-		if foundJ {
-			return false
-		}
-		return values[i].Name < values[j].Name
-	})
+	return dirName, values
 }
 
 func (c *circuit) registerRoute(path, contentType string, data []byte) {
