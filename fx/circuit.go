@@ -20,7 +20,6 @@ type Circuit interface {
 	Reader(path string) string
 	ToBytes(input string) []byte
 	Compress(data []byte) []byte
-	Value() map[string][]*Value
 }
 
 type circuit struct {
@@ -40,10 +39,6 @@ func NewCircuit() Circuit {
 		router: http.NewServeMux(),
 		value:  make(map[string][]*Value),
 	}
-}
-
-func (c *circuit) Value() map[string][]*Value {
-	return c.value
 }
 
 func (c *circuit) Router() *http.ServeMux {
@@ -72,7 +67,7 @@ func (c *circuit) ToBytes(input string) []byte {
 
 func (c *circuit) Compress(data []byte) []byte {
 	var buf bytes.Buffer
-	w := gzip.NewWriter(&buf)
+	w, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
 	w.Write(data)
 	w.Close()
 	return buf.Bytes()
@@ -83,8 +78,13 @@ func (c *circuit) Read(path, prefix string) {
 	if v == nil {
 		return
 	}
+	route := v.Name
+	if prefix != "" {
+		route = prefix + "/" + v.Name
+	}
 	c.value[prefix] = []*Value{v}
-	c.registerRoute(prefix+"/"+v.Name, v.Type, c.Compress(v.Data))
+	c.registerRoute(route, v.Type, c.Compress(v.Data))
+	v.Data = nil
 }
 
 func (c *circuit) Reader(path string) string {
@@ -101,6 +101,9 @@ func (c *circuit) Reader(path string) string {
 	}
 
 	c.registerRoute(dirName, "application/octet-stream", c.Compress(buf.Bytes()))
+	for _, v := range values {
+		v.Data = nil
+	}
 	return dirName
 }
 

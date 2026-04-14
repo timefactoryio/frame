@@ -6,6 +6,27 @@ import (
 	"strings"
 )
 
+// func (fx *Fx) Logo(path string) template.HTML {
+// 	if strings.ToLower(filepath.Ext(path)) == ".svg" {
+// 		if b := fx.ToBytes(path); b != nil {
+// 			return template.HTML(b)
+// 		}
+// 		return ""
+// 	}
+
+// 	if !strings.HasPrefix(path, "http://") && !strings.HasPrefix(path, "https://") {
+// 		fx.Read(path, "")
+// 		name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+// 		path = fx.APIURL + "/" + name
+// 	}
+
+// 	alt := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+// 	return template.HTML(fmt.Sprintf(`<img src="%s" alt="%s">`,
+// 		html.EscapeString(path),
+// 		html.EscapeString(alt),
+// 	))
+// }
+
 func (fx *Fx) Home(logo, heading string) {
 	logoEmbed := fx.ToBytes(logo)
 	if logoEmbed == nil {

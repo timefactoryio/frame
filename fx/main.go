@@ -12,6 +12,7 @@ type Fx struct {
 	Forge
 	Element
 	Circuit
+	// APIURL string
 	Hello []byte
 }
 
@@ -50,10 +51,6 @@ func (fx *Fx) BuildHello() {
 }
 
 func (fx *Fx) HandleHello(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.Write(fx.Hello)

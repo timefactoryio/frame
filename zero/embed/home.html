@@ -3,7 +3,6 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
 		height: 100%;
 		width: 100%;
 		text-align: center;
@@ -11,17 +10,19 @@
 		overflow: hidden;
 		padding: 2em;
 	}
-	.home .content {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		flex: 1;
-		justify-content: center;
-	}
-	.home svg {
+	.home .logo {
+		margin-top: auto;
 		max-width: 95%;
 		height: 20vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.home .logo > * {
+		max-width: 100%;
+		max-height: 100%;
 		width: auto;
+		height: auto;
 		object-fit: contain;
 	}
 	.home h1 {
@@ -29,7 +30,7 @@
 		white-space: nowrap;
 		overflow: hidden;
 		font-size: clamp(1rem, 2.5vw, 3rem);
-		margin: 0;
+		margin: 0 0 auto 0;
 	}
 	.home button {
 		padding: 0.5em 1.5em;
@@ -54,10 +55,8 @@
 	}
 </style>
 <div class="home">
-	<div class="content">
-		{{.LOGO}}
-		<h1>{{.HEADING}}</h1>
-	</div>
+	<div class="logo">{{.LOGO}}</div>
+	<h1>{{.HEADING}}</h1>
 	<button>Press<kbd>Z</kbd></button>
 </div>
 <script>
