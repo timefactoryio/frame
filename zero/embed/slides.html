@@ -23,32 +23,19 @@
 		let slides = [];
 		let index = pathless.read()[prefix] || 0;
 
-		function unpack(buf) {
-			const view = new DataView(buf);
-			const manifestLen = view.getUint32(0);
-			const manifest = JSON.parse(
-				new TextDecoder().decode(new Uint8Array(buf, 4, manifestLen)),
-			);
-			let offset = 4 + manifestLen;
-			return manifest.map((e) => {
-				const blob = new Blob([new Uint8Array(buf, offset, e.Size)], {
-					type: e.Type,
-				});
-				offset += e.Size;
-				return { Name: e.Name, url: URL.createObjectURL(blob) };
-			});
-		}
-
 		function show(i) {
 			if (!slides.length) return;
 			index = ((i % slides.length) + slides.length) % slides.length;
 			pathless.write(prefix, index);
 			img.src = slides[index].url;
-			img.alt = slides[index].Name;
+			img.alt = slides[index].name;
 		}
 
-		pathless.fetch(`${window.apiUrl}/${prefix}`).then((buf) => {
-			slides = unpack(buf);
+		pathless.fetch(`${window.apiUrl}/${prefix}`).then((entries) => {
+			slides = entries.map((e) => ({
+				name: e.name,
+				url: URL.createObjectURL(new Blob([e.data], { type: e.type })),
+			}));
 			if (slides.length) show(index);
 		});
 

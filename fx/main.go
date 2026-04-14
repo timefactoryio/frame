@@ -1,8 +1,11 @@
 package fx
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/timefactoryio/frame/zero"
 )
@@ -16,12 +19,6 @@ type Fx struct {
 	Hello []byte
 }
 
-type hello struct {
-	Frames   []string        `json:"frames"`
-	Keyboard string          `json:"keyboard"`
-	Layouts  json.RawMessage `json:"layouts"`
-}
-
 func NewFx() *Fx {
 	return &Fx{
 		Forge:   NewForge().(*forge),
@@ -32,22 +29,28 @@ func NewFx() *Fx {
 }
 
 func (fx *Fx) BuildHello() {
-	frames := make([]string, 0, len(fx.Frames()))
-	for _, frame := range fx.Frames() {
+	var values []*Value
+
+	kb := []byte(fx.Keyboard)
+	values = append(values, &Value{Name: "keyboard", Type: "text/html", Size: len(kb), Data: kb})
+	values = append(values, &Value{Name: "layouts", Type: "application/json", Size: len(fx.Layouts), Data: fx.Layouts})
+
+	for i, frame := range fx.Frames() {
 		if frame != nil {
-			frames = append(frames, string(*frame))
+			data := []byte(string(*frame))
+			values = append(values, &Value{Name: strconv.Itoa(i), Type: "text/html", Size: len(data), Data: data})
 		}
 	}
 
-	u := &hello{
-		Frames:   frames,
-		Keyboard: fx.Keyboard,
-		Layouts:  json.RawMessage(fx.Layouts),
+	manifestJSON, _ := json.Marshal(values)
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.BigEndian, uint32(len(manifestJSON)))
+	buf.Write(manifestJSON)
+	for _, v := range values {
+		buf.Write(v.Data)
 	}
 
-	if jsonData, err := json.Marshal(u); err == nil {
-		fx.Hello = fx.Compress(jsonData)
-	}
+	fx.Hello = fx.Compress(buf.Bytes())
 }
 
 func (fx *Fx) HandleHello(w http.ResponseWriter, r *http.Request) {
