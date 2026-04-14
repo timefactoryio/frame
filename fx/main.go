@@ -54,7 +54,7 @@ func (fx *Fx) BuildHello() {
 }
 
 func (fx *Fx) HandleHello(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.Write(fx.Hello)
 }
