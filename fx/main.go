@@ -30,7 +30,6 @@ func NewFx() *Fx {
 
 func (fx *Fx) BuildHello() {
 	var values []*Value
-
 	kb := []byte(fx.Keyboard)
 	values = append(values, &Value{Name: "keyboard", Type: "text/html", Size: len(kb), Data: kb})
 
