@@ -32,10 +32,13 @@
 		}
 
 		pathless.fetch(`${window.apiUrl}/${prefix}`).then((entries) => {
-			slides = entries.map((e) => ({
-				name: e.name,
-				url: URL.createObjectURL(new Blob([e.data], { type: e.type })),
-			}));
+			for (const e of entries) {
+				if (!e.url)
+					e.url = URL.createObjectURL(
+						new Blob([e.data], { type: e.type }),
+					);
+			}
+			slides = entries;
 			if (slides.length) show(index);
 		});
 
