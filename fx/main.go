@@ -33,7 +33,6 @@ func (fx *Fx) BuildHello() {
 
 	kb := []byte(fx.Keyboard)
 	values = append(values, &Value{Name: "keyboard", Type: "text/html", Size: len(kb), Data: kb})
-	values = append(values, &Value{Name: "layouts", Type: "application/json", Size: len(fx.Layouts), Data: fx.Layouts})
 
 	for i, frame := range fx.Frames() {
 		if frame != nil {
