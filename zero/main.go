@@ -16,11 +16,15 @@ var textHtml string
 //go:embed embed/keyboard.html
 var keyboardHtml string
 
+//go:embed embed/app.html
+var appHtml string
+
 type Zero struct {
 	SlidesTemplate string
 	TextTemplate   string
 	HomeTemplate   string
 	Keyboard       string
+	AppTemplate    string
 }
 
 func NewZero() *Zero {
@@ -29,5 +33,6 @@ func NewZero() *Zero {
 		TextTemplate:   textHtml,
 		HomeTemplate:   homeHtml,
 		Keyboard:       keyboardHtml,
+		AppTemplate:    appHtml,
 	}
 }

@@ -85,3 +85,19 @@ func (fx *Fx) Slides(dir string) {
 	html := One(template.HTML(buf.String()))
 	fx.Build("slides", &html)
 }
+
+func (fx *Fx) App(title, url string) {
+	tmpl, err := template.New("frame").Parse(fx.AppTemplate)
+	if err != nil {
+		return
+	}
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, map[string]string{
+		"TITLE": title,
+		"URL":   url,
+	}); err != nil {
+		return
+	}
+	o := One(template.HTML(buf.String()))
+	fx.Build("app", &o)
+}
